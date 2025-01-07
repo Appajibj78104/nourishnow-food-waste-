@@ -23,7 +23,11 @@ const StatisticsAnimation = () => {
     }, []);
 
     return (
-        <section id="stats-section" className="py-20 bg-gray-900 text-white">
+        <section 
+            id="stats-section" 
+            className={`py-20 bg-gray-900 text-white opacity-0 transform translate-y-10 transition-all duration-1000 ease-out
+                ${isVisible ? 'opacity-100 translate-y-0' : ''}`}
+        >
             <div className="container mx-auto px-4">
                 <h2 className="text-3xl font-bold text-center mb-12">The Reality of Hunger in India</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
