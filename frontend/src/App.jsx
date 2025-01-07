@@ -1,19 +1,22 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import LoginForm from './components/LoginForm';
-import RegisterForm from './components/RegisterForm';
-import { AuthProvider } from './context/AuthContext';
-
+import Layout from './components/Layout';
+import HomePage from './components/HomePage';
+import LoginPage from './components/LoginForm';
+import RegisterPage from './components/RegisterForm';
+import DonorDashboard from './pages/donor/DonorDashboard';
 const App = () => {
     return (
-        <AuthProvider>
-            <Router>
+        <Router>
+            <Layout>
                 <Routes>
-                    <Route path="/" element={<LoginForm />} />
-                    <Route path="/register" element={<RegisterForm />} />
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/donor/dashboard" element={<DonorDashboard />} />
                 </Routes>
-            </Router>
-        </AuthProvider>
+            </Layout>
+        </Router>
     );
 };
 
