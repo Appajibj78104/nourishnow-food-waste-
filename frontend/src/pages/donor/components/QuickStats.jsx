@@ -1,61 +1,117 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { FaBoxOpen, FaHandHoldingHeart, FaUsers, FaClock } from 'react-icons/fa';
+import CountUp from 'react-countup';
 
 const QuickStats = ({ stats }) => {
     const statItems = [
         {
-            title: 'Total Donations',
+            icon: FaBoxOpen,
+            label: 'Total Donations',
             value: stats?.totalDonations || 0,
-            color: 'blue',
-            icon: (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-                </svg>
-            )
+            color: 'from-blue-500 to-blue-600',
+            suffix: '',
         },
         {
-            title: 'Successful Pickups',
-            value: stats?.successfulPickups || 0,
-            color: 'green',
-            icon: (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            )
+            icon: FaHandHoldingHeart,
+            label: 'Meals Provided',
+            value: stats?.mealsProvided || 0,
+            color: 'from-emerald-500 to-emerald-600',
+            suffix: '+',
         },
         {
-            title: 'Upcoming Pickups',
-            value: stats?.upcomingPickups || 0,
-            color: 'yellow',
-            icon: (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            )
+            icon: FaUsers,
+            label: 'People Impacted',
+            value: stats?.peopleImpacted || 0,
+            color: 'from-purple-500 to-purple-600',
+            suffix: '+',
+        },
+        {
+            icon: FaClock,
+            label: 'Pending Pickups',
+            value: stats?.pendingPickups || 0,
+            color: 'from-amber-500 to-amber-600',
+            suffix: '',
         }
     ];
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {statItems.map((item, index) => (
                 <motion.div
-                    key={index}
+                    key={item.label}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className={`bg-white rounded-lg shadow p-6 border-l-4 border-${item.color}-500`}
+                    whileHover={{ scale: 1.02 }}
+                    className="backdrop-blur-lg bg-white/5 rounded-2xl p-6 border border-white/10"
                 >
-                    <div className="flex items-center">
-                        <div className={`p-3 rounded-full bg-${item.color}-100 text-${item.color}-500`}>
-                            {item.icon}
-                        </div>
-                        <div className="ml-4">
-                            <h3 className="text-sm font-medium text-gray-500">{item.title}</h3>
-                            <p className="text-2xl font-semibold text-gray-900">{item.value}</p>
-                        </div>
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${item.color} flex items-center justify-center mb-4`}>
+                        <item.icon className="text-white text-xl" />
+                    </div>
+                    
+                    <h3 className="text-gray-400 text-sm mb-2">{item.label}</h3>
+                    
+                    <div className="text-2xl font-bold text-white">
+                        <CountUp
+                            end={item.value}
+                            duration={2.5}
+                            suffix={item.suffix}
+                            enableScrollSpy
+                            scrollSpyOnce
+                        />
+                    </div>
+
+                    {/* Progress Indicator */}
+                    <div className="mt-4 h-1 bg-white/10 rounded-full overflow-hidden">
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${Math.min((item.value / 100) * 100, 100)}%` }}
+                            transition={{ duration: 1.5, delay: index * 0.1 }}
+                            className={`h-full bg-gradient-to-r ${item.color}`}
+                        />
                     </div>
                 </motion.div>
             ))}
+
+            {/* Impact Summary */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="lg:col-span-4 backdrop-blur-lg bg-white/5 rounded-2xl p-6 border border-white/10"
+            >
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h3 className="text-white font-semibold mb-1">Your Impact</h3>
+                        <p className="text-gray-400 text-sm">
+                            You've helped reduce food waste and feed those in need
+                        </p>
+                    </div>
+                    <div className="text-right">
+                        <div className="text-emerald-400 font-semibold">
+                            <CountUp
+                                end={stats?.impactPercentage || 0}
+                                duration={2.5}
+                                suffix="%"
+                                enableScrollSpy
+                                scrollSpyOnce
+                            />
+                        </div>
+                        <p className="text-gray-400 text-sm">Success Rate</p>
+                    </div>
+                </div>
+
+                {/* Impact Progress Bar */}
+                <div className="mt-4 h-2 bg-white/10 rounded-full overflow-hidden">
+                    <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${stats?.impactPercentage || 0}%` }}
+                        transition={{ duration: 1.5 }}
+                        className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600"
+                    />
+                </div>
+            </motion.div>
         </div>
     );
 };

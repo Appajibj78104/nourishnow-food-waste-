@@ -25,12 +25,6 @@ const LoginForm = () => {
         setIsLoading(true);
 
         try {
-            // Debug log
-            console.log('Sending login request with:', {
-                url: 'http://localhost:5000/api/auth/login',
-                data: formData
-            });
-
             const response = await axios({
                 method: 'POST',
                 url: 'http://localhost:5000/api/auth/login',
@@ -40,31 +34,29 @@ const LoginForm = () => {
                 }
             });
             
-            // Debug log
-            console.log('Login response:', response.data);
-
             if (response.data && response.data.token) {
-                // Store auth data
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('user', JSON.stringify(response.data.user));
                 
-                // Debug log
-                console.log('Stored user data:', response.data.user);
-                
-                // Navigate based on role
-                const role = response.data.user.role;
-                switch(role) {
-                    case 'admin':
-                        navigate('/admin/dashboard');
-                        break;
-                    case 'ngo':
-                        navigate('/ngo/dashboard');
-                        break;
-                    case 'donor':
+                // Check if user is donor and profile completion status
+                if (response.data.user.role === 'donor') {
+                    if (response.data.user.isProfileComplete) {
                         navigate('/donor/dashboard');
-                        break;
-                    default:
-                        navigate('/dashboard');
+                    } else {
+                        navigate('/donor/profile-completion');
+                    }
+                } else {
+                    // Handle other roles as before
+                    switch(response.data.user.role) {
+                        case 'admin':
+                            navigate('/admin/dashboard');
+                            break;
+                        case 'ngo':
+                            navigate('/ngo/dashboard');
+                            break;
+                        default:
+                            navigate('/dashboard');
+                    }
                 }
             } else {
                 throw new Error('No token received');

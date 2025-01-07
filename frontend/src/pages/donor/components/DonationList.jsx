@@ -1,61 +1,137 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FaEdit, FaTrash, FaClock, FaCheckCircle, FaTruck } from 'react-icons/fa';
+import { format } from 'date-fns';
 
-const DonationList = ({ donations }) => {
+const DonationList = ({ donations, showActions = false, onEdit, onDelete }) => {
     const [selectedDonation, setSelectedDonation] = useState(null);
 
-    const statusColors = {
-        pending: 'yellow',
-        picked_up: 'green',
-        cancelled: 'red',
-        scheduled: 'blue'
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'pending': return 'text-amber-400';
+            case 'accepted': return 'text-blue-400';
+            case 'completed': return 'text-emerald-400';
+            case 'cancelled': return 'text-red-400';
+            default: return 'text-gray-400';
+        }
+    };
+
+    const getStatusIcon = (status) => {
+        switch (status) {
+            case 'pending': return FaClock;
+            case 'accepted': return FaTruck;
+            case 'completed': return FaCheckCircle;
+            default: return FaClock;
+        }
     };
 
     return (
-        <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Recent Donations</h2>
+        <div className="space-y-4">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+                    Your Donations
+                </h2>
+                <div className="flex space-x-2">
+                    <select 
+                        className="px-3 py-1 rounded-xl bg-white/5 border border-white/10 text-gray-300 text-sm"
+                        onChange={(e) => {/* Handle filter */}}
+                    >
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
             </div>
-            <div className="divide-y divide-gray-200">
+
+            <div className="space-y-4">
                 <AnimatePresence>
-                    {donations.map((donation) => (
-                        <motion.div
-                            key={donation._id}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="p-6 hover:bg-gray-50 cursor-pointer"
-                            onClick={() => setSelectedDonation(donation)}
-                        >
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h3 className="text-lg font-medium text-gray-900">
-                                        {donation.type}
-                                    </h3>
-                                    <div className="mt-1 text-sm text-gray-500 space-y-1">
-                                        <p>Quantity: {donation.quantity}</p>
-                                        <p>Pickup Date: {new Date(donation.pickupDate).toLocaleDateString()}</p>
+                    {donations.map((donation, index) => {
+                        const StatusIcon = getStatusIcon(donation.status);
+                        return (
+                            <motion.div
+                                key={donation.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                transition={{ delay: index * 0.1 }}
+                                className="backdrop-blur-lg bg-white/5 rounded-2xl p-6 border border-white/10"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-4">
+                                        <div className={`p-3 rounded-xl bg-white/5 ${getStatusColor(donation.status)}`}>
+                                            <StatusIcon className="text-xl" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-white font-semibold">
+                                                {donation.type} - {donation.quantity} units
+                                            </h3>
+                                            <p className="text-gray-400 text-sm">
+                                                Pickup: {format(new Date(donation.pickupDate), 'PPp')}
+                                            </p>
+                                        </div>
                                     </div>
+
+                                    {showActions && (
+                                        <div className="flex items-center space-x-3">
+                                            <button
+                                                onClick={() => onEdit(donation.id)}
+                                                className="p-2 rounded-xl bg-white/5 text-blue-400 hover:bg-white/10 transition-colors"
+                                            >
+                                                <FaEdit />
+                                            </button>
+                                            <button
+                                                onClick={() => onDelete(donation.id)}
+                                                className="p-2 rounded-xl bg-white/5 text-red-400 hover:bg-white/10 transition-colors"
+                                            >
+                                                <FaTrash />
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="flex items-center space-x-4">
-                                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-${statusColors[donation.status]}-100 text-${statusColors[donation.status]}-800`}>
-                                        {donation.status}
-                                    </span>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            // Add edit functionality
-                                        }}
-                                        className="text-gray-400 hover:text-gray-500"
-                                    >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))}
+
+                                {/* Expandable Details */}
+                                <AnimatePresence>
+                                    {selectedDonation === donation.id && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            className="mt-4 pt-4 border-t border-white/10"
+                                        >
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <p className="text-gray-400 text-sm">Description:</p>
+                                                    <p className="text-white">{donation.description}</p>
+                                                </div>
+                                                {donation.images?.length > 0 && (
+                                                    <div className="flex space-x-2">
+                                                        {donation.images.map((image, i) => (
+                                                            <img
+                                                                key={i}
+                                                                src={image}
+                                                                alt={`Donation ${i + 1}`}
+                                                                className="w-20 h-20 rounded-lg object-cover"
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                <button
+                                    onClick={() => setSelectedDonation(
+                                        selectedDonation === donation.id ? null : donation.id
+                                    )}
+                                    className="mt-4 text-sm text-gray-400 hover:text-white transition-colors"
+                                >
+                                    {selectedDonation === donation.id ? 'Show less' : 'Show more'}
+                                </button>
+                            </motion.div>
+                        );
+                    })}
                 </AnimatePresence>
             </div>
         </div>
