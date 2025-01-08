@@ -78,7 +78,7 @@ const RegisterForm = () => {
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-xl">
                     <div className="text-center mb-8">
                         <Link to="/" className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-teal-400 text-transparent bg-clip-text">
-                            NourishMe
+                            NourishNow
                         </Link>
                         <h2 className="mt-6 text-2xl font-bold text-white">
                             Create your account

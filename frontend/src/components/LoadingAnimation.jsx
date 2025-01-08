@@ -16,7 +16,7 @@ const LoadingAnimation = () => {
                 transition={{ duration: 0.5 }}
             >
                 <span className="bg-gradient-to-r from-blue-400 via-teal-400 to-emerald-400 text-transparent bg-clip-text">
-                    NourishMe
+                    NourishNow
                 </span>
                 <motion.div
                     className="ml-2 w-3 h-3 bg-blue-400 rounded-full"

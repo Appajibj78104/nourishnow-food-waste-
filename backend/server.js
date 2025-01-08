@@ -1,38 +1,66 @@
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./db');
+const dotenv = require('dotenv');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
+const { connectDB } = require('./config/db');
+const authRoutes = require('./routes/authRoutes');
+const donationRoutes = require('./routes/donationRoutes');
+const ngoRoutes = require('./routes/ngoRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const { errorHandler } = require('./middleware/errorMiddleware');
+const path = require('path');
+
+// Load env vars
+dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
 
-// CORS configuration
-app.use(cors({
-    origin: 'http://localhost:5173',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    exposedHeaders: ['Access-Control-Allow-Credentials']
-}));
-
-// Middleware
-app.use(express.json());
-
-// Set additional headers
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    next();
+// Socket.io setup
+const io = new Server(httpServer, {
+    cors: {
+        origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+        credentials: true
+    }
 });
 
-// Connect to database
-connectDB();
+// Make io accessible in routes
+app.set('io', io);
+
+// Middleware
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Static folder for uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
-const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
+app.use('/api/donor', donationRoutes);
+app.use('/api/ngo', ngoRoutes);
+app.use('/api/chat', chatRoutes);
+
+// Error Handler
+app.use(errorHandler);
+
+// Connect to Database
+connectDB();
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+httpServer.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+    console.log('UNHANDLED REJECTION! 💥 Shutting down...');
+    console.log(err.name, err.message);
+    httpServer.close(() => {
+        process.exit(1);
+    });
 });

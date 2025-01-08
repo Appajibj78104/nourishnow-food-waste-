@@ -52,7 +52,7 @@ const HomePage = () => {
                                     transition={{ duration: 0.5, delay: 2.2 }}
                                 >
                                     <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 to-teal-400 text-transparent bg-clip-text">
-                                        NourishMe
+                                        NourishNow
                                     </span>
                                 </motion.div>
                                 <motion.div 

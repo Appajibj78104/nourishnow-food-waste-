@@ -1,25 +1,41 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/User.js');
 
-const protect = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    console.log('Authorization Header:', authHeader);
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ message: 'Unauthorized, token missing or invalid' });
-    }
-
-    const token = authHeader.split(' ')[1];
-    console.log('Extracted Token:', token);
-
+ const protect = async (req, res, next) => {
     try {
+        let token;
+
+        if (req.headers.authorization?.startsWith('Bearer')) {
+            token = req.headers.authorization.split(' ')[1];
+        }
+
+        if (!token) {
+            return res.status(401).json({ message: 'Not authorized, no token' });
+        }
+
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log('Decoded Token:', decoded);
-        req.user = decoded;
+        const user = await User.findById(decoded.userId).select('-password');
+
+        if (!user) {
+            return res.status(401).json({ message: 'Not authorized, user not found' });
+        }
+
+        req.user = user;
         next();
     } catch (error) {
-        console.error('Token Verification Error:', error);
-        res.status(401).json({ message: 'Invalid token' });
+        console.error('Auth Middleware Error:', error);
+        res.status(401).json({ message: 'Not authorized, token failed' });
     }
 };
 
-module.exports = { protect };
+ const authorize = (...roles) => {
+    return (req, res, next) => {
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({ 
+                message: 'Not authorized to access this route' 
+            });
+        }
+        next();
+    };
+};
+module.exports = { protect, authorize };

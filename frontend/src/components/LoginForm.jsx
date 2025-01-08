@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import axios from 'axios';
+import { login } from '../services/authService';
 
 const LoginForm = () => {
     const navigate = useNavigate();
@@ -25,52 +25,42 @@ const LoginForm = () => {
         setIsLoading(true);
 
         try {
-            const response = await axios({
-                method: 'POST',
-                url: 'http://localhost:5000/api/auth/login',
-                data: formData,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (response.data && response.data.token) {
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('user', JSON.stringify(response.data.user));
-                
-                // Check if user is donor and profile completion status
-                if (response.data.user.role === 'donor') {
-                    if (response.data.user.isProfileComplete) {
-                        navigate('/donor/dashboard');
-                    } else {
-                        navigate('/donor/profile-completion');
-                    }
+            const response = await login(formData);
+            console.log('Login successful:', response);
+
+            // Verify token storage immediately after login
+            const storedToken = localStorage.getItem('token');
+            const storedUser = localStorage.getItem('user');
+            console.log('Stored token after login:', storedToken);
+            console.log('Stored user after login:', storedUser);
+
+            if (!storedToken) {
+                throw new Error('Token not stored properly');
+            }
+
+            if (response.user.role === 'donor') {
+                if (response.user.isProfileComplete) {
+                    navigate('/donor/dashboard');
                 } else {
-                    // Handle other roles as before
-                    switch(response.data.user.role) {
-                        case 'admin':
-                            navigate('/admin/dashboard');
-                            break;
-                        case 'ngo':
-                            navigate('/ngo/dashboard');
-                            break;
-                        default:
-                            navigate('/dashboard');
-                    }
+                    navigate('/donor/profile-completion');
                 }
             } else {
-                throw new Error('No token received');
+                switch(response.user.role) {
+                    case 'admin':
+                        navigate('/admin/dashboard');
+                        break;
+                    case 'ngo':
+                        navigate('/ngo/dashboard');
+                        break;
+                    default:
+                        navigate('/dashboard');
+                }
             }
         } catch (err) {
-            console.error('Login error details:', {
-                message: err.message,
-                response: err.response?.data,
-                status: err.response?.status
-            });
-            
+            console.error('Login error details:', err);
             setError(
-                err.response?.data?.message || 
-                'Login failed. Please check your credentials and try again.'
+                err.message || 
+                (typeof err === 'string' ? err : 'Login failed. Please check your credentials.')
             );
         } finally {
             setIsLoading(false);
@@ -97,7 +87,7 @@ const LoginForm = () => {
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-xl">
                     <div className="text-center mb-8">
                         <Link to="/" className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-teal-400 text-transparent bg-clip-text">
-                            NourishMe
+                            NourishNow
                         </Link>
                         <h2 className="mt-6 text-2xl font-bold text-white">
                             Welcome back
