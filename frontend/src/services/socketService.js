@@ -1,9 +1,9 @@
-import io from 'socket.io-client';
+import  io from 'socket.io-client';
 import { toast } from 'react-toastify';
 
 let socket = null;
 
-export const initializeSocket = (token) => {
+const initializeSocket = (token) => {
     if (socket) return socket;
 
     socket = io(process.env.REACT_APP_SOCKET_URL, {
@@ -29,7 +29,7 @@ export const initializeSocket = (token) => {
     return socket;
 };
 
-export const disconnectSocket = () => {
+const disconnectSocket = () => {
     if (socket) {
         socket.disconnect();
         socket = null;
@@ -37,36 +37,47 @@ export const disconnectSocket = () => {
 };
 
 // Chat events
-export const joinChat = (chatId) => {
+const joinChat = (chatId) => {
     if (socket) {
         socket.emit('joinChat', chatId);
     }
 };
 
-export const leaveChat = (chatId) => {
+const leaveChat = (chatId) => {
     if (socket) {
         socket.emit('leaveChat', chatId);
     }
 };
 
-export const sendMessage = (chatId, content) => {
+const sendMessage = (chatId, content) => {
     if (socket) {
         socket.emit('sendMessage', { chatId, content });
     }
 };
 
-export const emitTyping = (chatId) => {
+const emitTyping = (chatId) => {
     if (socket) {
         socket.emit('typing', { chatId });
     }
 };
 
 // Donation events
-export const notifyDonationCreated = (donation) => {
+const notifyDonationCreated = (donation) => {
     if (socket) {
         socket.emit('donationCreated', donation);
     }
 };
 
 // Get socket instance
-export const getSocket = () => socket; 
+ const getSocket = () => socket;
+
+export default {
+    initializeSocket,
+    disconnectSocket,
+    joinChat,
+    leaveChat,
+    sendMessage,
+    emitTyping,
+    notifyDonationCreated,
+    getSocket
+}; 

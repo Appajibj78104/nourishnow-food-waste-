@@ -5,10 +5,14 @@ import { motion } from 'framer-motion';
 import { GoogleMap, LoadScript, Autocomplete } from '@react-google-maps/api';
 import { FaIdCard, FaMapMarkerAlt, FaCamera } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+import { setProfileCompleted } from '../utils/authUtils';
 
 const DonorProfileForm = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { completeProfile } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '', // Will be fetched from auth
@@ -115,9 +119,11 @@ const DonorProfileForm = () => {
       if (step < 3) {
         setStep(step + 1);
       } else {
-        // Submit form data to API
         try {
-          // API call here
+          // Submit form data to API
+          await axios.post('/api/donor/profile', formData);
+          completeProfile();
+          setProfileCompleted();
           navigate('/donor/dashboard');
         } catch (error) {
           console.error('Error submitting form:', error);

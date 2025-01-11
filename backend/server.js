@@ -10,7 +10,7 @@ const ngoRoutes = require('./routes/ngoRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const { errorHandler } = require('./middleware/errorMiddleware');
 const path = require('path');
-
+const adminRoutes = require('./routes/adminRoutes');
 // Load env vars
 dotenv.config();
 
@@ -44,7 +44,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/donor', donationRoutes);
 app.use('/api/ngo', ngoRoutes);
 app.use('/api/chat', chatRoutes);
-
+app.use('/api/admin', adminRoutes);
 // Error Handler
 app.use(errorHandler);
 
