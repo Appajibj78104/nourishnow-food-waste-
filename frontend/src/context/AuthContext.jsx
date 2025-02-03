@@ -1,13 +1,32 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { checkFirstTimeLogin } from '../utils/authUtils';
+<<<<<<< HEAD
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+=======
+
+// Create the context
+const AuthContext = createContext(null);
+
+// Export the hook first
+export function useAuth() {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
+}
+
+// Export the provider component
+export function AuthProvider({ children }) {
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
     const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
 
+<<<<<<< HEAD
     useEffect(() => {
         checkAuthStatus();
     }, []);
@@ -49,14 +68,84 @@ export const AuthProvider = ({ children }) => {
         setUser({ ...userData, isFirstTime });
         setIsAuthenticated(true);
         return response.data;
+=======
+    const setAuthToken = (token) => {
+        if (token) {
+            axios.defaults.headers.common['Authorization'] = token;
+        } else {
+            delete axios.defaults.headers.common['Authorization'];
+        }
+    };
+
+    const login = async (credentials) => {
+        try {
+            const response = await axios.post('/api/auth/login', credentials);
+            const { token, user } = response.data;
+            
+            const tokenWithBearer = `Bearer ${token}`;
+            localStorage.setItem('token', tokenWithBearer);
+            localStorage.setItem('user', JSON.stringify(user));
+            
+            // Set default auth header
+            axios.defaults.headers.common['Authorization'] = tokenWithBearer;
+            
+            setUser(user);
+            setIsAuthenticated(true);
+            
+            return response.data;
+        } catch (error) {
+            console.error('Login error:', error);
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            delete axios.defaults.headers.common['Authorization'];
+            setUser(null);
+            setIsAuthenticated(false);
+            throw error;
+        }
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
     };
 
     const logout = () => {
         localStorage.removeItem('token');
+<<<<<<< HEAD
+=======
+        localStorage.removeItem('user');
+        setAuthToken(null);
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
         setUser(null);
         setIsAuthenticated(false);
     };
 
+<<<<<<< HEAD
+=======
+    const checkAuthStatus = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const storedUser = localStorage.getItem('user');
+
+            if (!token || !storedUser) {
+                setLoading(false);
+                return;
+            }
+
+            // Set token in axios headers
+            axios.defaults.headers.common['Authorization'] = token;
+
+            // Set initial state from localStorage
+            setUser(JSON.parse(storedUser));
+            setIsAuthenticated(true);
+            setLoading(false);
+        } catch (error) {
+            console.error('Auth check failed:', error);
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        checkAuthStatus();
+    }, []);
+
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
     const completeProfile = async (profileData) => {
         try {
             const response = await axios.post(
@@ -81,10 +170,35 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+<<<<<<< HEAD
+=======
+    // Add this function to check token
+    const getAuthToken = () => {
+        const token = localStorage.getItem('token');
+        return token?.startsWith('Bearer ') ? token : token ? `Bearer ${token}` : null;
+    };
+
+    const updateUser = (userData) => {
+        try {
+            // Update context state
+            setUser(userData);
+            
+            // Update localStorage
+            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+            const updatedUser = { ...currentUser, ...userData };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+        } catch (error) {
+            console.error('Error updating user:', error);
+            throw error;
+        }
+    };
+
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
     if (loading) {
         return <div>Loading...</div>;
     }
 
+<<<<<<< HEAD
     return (
         <AuthContext.Provider value={{
             user,
@@ -100,3 +214,22 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext); 
+=======
+    const value = {
+        user,
+        isAuthenticated,
+        loading,
+        login,
+        logout,
+        checkAuthStatus,
+        completeProfile,
+        updateUser
+    };
+
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
+    );
+} 
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)

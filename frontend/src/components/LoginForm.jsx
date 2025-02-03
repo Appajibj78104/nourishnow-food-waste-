@@ -1,10 +1,22 @@
 import React, { useState } from 'react';
+<<<<<<< HEAD
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { login } from '../services/authService';
 
 const LoginForm = () => {
     const navigate = useNavigate();
+=======
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
+
+const LoginForm = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { login } = useAuth();
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
@@ -26,6 +38,7 @@ const LoginForm = () => {
 
         try {
             const response = await login(formData);
+<<<<<<< HEAD
             console.log('Login successful:', response);
 
             // Verify token storage immediately after login
@@ -62,6 +75,37 @@ const LoginForm = () => {
                 err.message || 
                 (typeof err === 'string' ? err : 'Login failed. Please check your credentials.')
             );
+=======
+            const { user } = response;
+            
+            // Log the user role and navigation
+            console.log('User role:', user.role);
+            
+            // Redirect based on user role
+            let redirectPath;
+            switch(user.role) {
+                case 'donor':
+                    redirectPath = '/donor/dashboard';
+                    break;
+                case 'ngo':
+                    redirectPath = '/ngo/dashboard';
+                    break;
+                case 'admin':
+                    redirectPath = '/admin/dashboard';
+                    break;
+                default:
+                    redirectPath = '/';
+            }
+            
+            console.log('Redirecting to:', redirectPath);
+            toast.success('Login successful!');
+            navigate(redirectPath, { replace: true });
+            
+        } catch (error) {
+            console.error('Login error:', error);
+            toast.error(error.message || 'Login failed');
+            setError(error.message || 'Login failed');
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
         } finally {
             setIsLoading(false);
         }

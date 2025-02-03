@@ -10,8 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+<<<<<<< HEAD
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+=======
+    "@emotion/react": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@heroicons/react": "^2.2.0",
     "@mui/icons-material": "^6.3.1",
@@ -52,6 +57,10 @@
     "globals": "^15.14.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
+<<<<<<< HEAD
     "vite": "^6.0.5"
+=======
+    "vite": "^6.0.11"
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
   }
 }

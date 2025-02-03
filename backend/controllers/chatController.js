@@ -1,5 +1,9 @@
 const Chat = require('../models/Chat.js');
+<<<<<<< HEAD
 const { catchAsync } = require('../utils/catchAsync');
+=======
+const catchAsync = require('../utils/catchAsync');
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
 
 // Get all chats for a user
  const getChats = catchAsync(async (req, res) => {

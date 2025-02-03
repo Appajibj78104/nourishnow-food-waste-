@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
+<<<<<<< HEAD
         unique: true
     },
     password: {
@@ -34,6 +35,69 @@ userSchema.pre('save', async function(next) {
         next(error);
     }
 });
+=======
+        unique: true,
+        lowercase: true
+    },
+    password: {
+        type: String,
+        required: true,
+        select: false
+    },
+    role: {
+        type: String,
+        enum: ['donor', 'ngo', 'admin'],
+        default: 'donor'
+    },
+    phone: {
+        type: String,
+        default: ''
+    },
+    address: {
+        type: String,
+        default: ''
+    },
+    profilePicture: {
+        type: String,
+        default: ''
+    },
+    preferences: {
+        notifications: {
+            email: { type: Boolean, default: true },
+            push: { type: Boolean, default: true }
+        },
+        privacySettings: {
+            showProfile: { type: Boolean, default: true },
+            showDonations: { type: Boolean, default: true }
+        }
+    },
+    organization: {
+        name: String,
+        position: String
+    },
+    socialLinks: {
+        facebook: String,
+        twitter: String,
+        linkedin: String
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+}, { timestamps: true });
+
+// Remove the pre-save hook temporarily to debug
+// We'll handle password hashing in the controller
+
+// Method to compare passwords
+userSchema.methods.matchPassword = async function(enteredPassword) {
+    console.log('Comparing passwords:', {
+        entered: enteredPassword,
+        stored: this.password
+    });
+    return await bcrypt.compare(enteredPassword, this.password);
+};
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
 
 const User = mongoose.model('User', userSchema);
 module.exports = User;

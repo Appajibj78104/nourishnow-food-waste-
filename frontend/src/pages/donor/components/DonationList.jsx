@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+<<<<<<< HEAD
 import { FaEdit, FaTrash, FaClock, FaCheckCircle, FaTruck } from 'react-icons/fa';
+=======
+import { FaEdit, FaTrash, FaClock, FaCheckCircle, FaTruck, FaTimesCircle } from 'react-icons/fa';
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
 import { format } from 'date-fns';
 
 const DonationList = ({ donations, showActions = false, onEdit, onDelete }) => {
@@ -18,10 +22,35 @@ const DonationList = ({ donations, showActions = false, onEdit, onDelete }) => {
 
     const getStatusIcon = (status) => {
         switch (status) {
+<<<<<<< HEAD
             case 'pending': return FaClock;
             case 'accepted': return FaTruck;
             case 'completed': return FaCheckCircle;
             default: return FaClock;
+=======
+            case 'completed':
+                return <FaCheckCircle className="text-green-500" />;
+            case 'pending':
+                return <FaClock className="text-yellow-500" />;
+            case 'accepted':
+                return <FaTruck className="text-blue-500" />;
+            case 'cancelled':
+                return <FaTimesCircle className="text-red-500" />;
+            default:
+                return <FaClock className="text-gray-500" />;
+        }
+    };
+
+    const formatDate = (dateString) => {
+        try {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return 'Invalid Date';
+            return format(date, 'PPp'); // e.g., "Apr 29, 2023, 3:00 PM"
+        } catch (error) {
+            console.error('Date formatting error:', error);
+            return 'Invalid Date';
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
         }
     };
 
@@ -46,6 +75,7 @@ const DonationList = ({ donations, showActions = false, onEdit, onDelete }) => {
 
             <div className="space-y-4">
                 <AnimatePresence>
+<<<<<<< HEAD
                     {donations.map((donation, index) => {
                         const StatusIcon = getStatusIcon(donation.status);
                         return (
@@ -133,6 +163,86 @@ const DonationList = ({ donations, showActions = false, onEdit, onDelete }) => {
                         );
                     })}
                 </AnimatePresence>
+=======
+                    {donations.map((donation, index) => (
+                        <motion.div
+                            key={donation._id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="backdrop-blur-lg bg-white/5 rounded-2xl p-6 border border-white/10"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-4">
+                                    <div className={`p-3 rounded-xl bg-white/5 ${getStatusColor(donation.status)}`}>
+                                        {getStatusIcon(donation.status)}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-white font-semibold">
+                                            {donation.foodType} - {donation.quantity} {donation.quantityUnit || 'servings'}
+                                        </h3>
+                                        <p className="text-gray-400 text-sm">
+                                            Expiry: {formatDate(donation.expiryDate)}
+                                        </p>
+                                        <p className="text-gray-400 text-sm">
+                                            Pickup: {formatDate(donation.pickupTime)}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {showActions && (
+                                    <div className="flex items-center space-x-3">
+                                        <button
+                                            onClick={() => onEdit(donation._id)}
+                                            className="p-2 rounded-xl bg-white/5 text-blue-400 hover:bg-white/10 transition-colors"
+                                        >
+                                            <FaEdit />
+                                        </button>
+                                        <button
+                                            onClick={() => onDelete(donation._id)}
+                                            className="p-2 rounded-xl bg-white/5 text-red-400 hover:bg-white/10 transition-colors"
+                                        >
+                                            <FaTrash />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Expandable Details */}
+                            <AnimatePresence>
+                                {selectedDonation === donation._id && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="mt-4 pt-4 border-t border-white/10"
+                                    >
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <p className="text-gray-400 text-sm">Description:</p>
+                                                <p className="text-white">{donation.description || 'No description provided'}</p>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            <button
+                                onClick={() => setSelectedDonation(
+                                    selectedDonation === donation._id ? null : donation._id
+                                )}
+                                className="mt-4 text-sm text-gray-400 hover:text-white transition-colors"
+                            >
+                                {selectedDonation === donation._id ? 'Show less' : 'Show more'}
+                            </button>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+                {donations.length === 0 && (
+                    <p className="text-center text-gray-400">No donations found</p>
+                )}
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
             </div>
         </div>
     );

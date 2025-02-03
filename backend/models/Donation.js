@@ -8,7 +8,12 @@ const donationSchema = new mongoose.Schema({
     },
     foodType: {
         type: String,
+<<<<<<< HEAD
         required: true
+=======
+        required: true,
+        enum: ['cooked', 'packaged', 'raw', 'other']
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
     },
     quantity: {
         type: Number,
@@ -16,7 +21,11 @@ const donationSchema = new mongoose.Schema({
     },
     quantityUnit: {
         type: String,
+<<<<<<< HEAD
         required: true
+=======
+        default: 'servings'
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
     },
     expiryDate: {
         type: Date,
@@ -32,14 +41,30 @@ const donationSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
+<<<<<<< HEAD
     status: {
         type: String,
         enum: ['pending', 'accepted', 'picked_up', 'completed', 'cancelled'],
+=======
+    description: {
+        type: String
+    },
+    images: [{
+        type: String
+    }],
+    status: {
+        type: String,
+        enum: ['pending', 'accepted', 'completed', 'cancelled'],
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
         default: 'pending'
     },
     assignedNGO: {
         type: mongoose.Schema.Types.ObjectId,
+<<<<<<< HEAD
         ref: 'User'
+=======
+        ref: 'NGO'
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
     },
     notes: String
 }, {

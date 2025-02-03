@@ -1,11 +1,19 @@
+<<<<<<< HEAD
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+=======
+import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import DonationList from './components/DonationList';
+import { getDonorDonations } from './services/donorService';
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
 
 const DonationHistory = () => {
     const [donations, setDonations] = useState([]);
     const [loading, setLoading] = useState(true);
+<<<<<<< HEAD
     const { user } = useAuth();
 
     useEffect(() => {
@@ -45,6 +53,49 @@ const DonationHistory = () => {
                     </div>
                 ))}
             </div>
+=======
+
+    useEffect(() => {
+        fetchDonations();
+    }, []);
+
+    const fetchDonations = async () => {
+        try {
+            setLoading(true);
+            const data = await getDonorDonations();
+            setDonations(data);
+        } catch (error) {
+            console.error('Error fetching donations:', error);
+            toast.error('Failed to load donations');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleEdit = (id) => {
+        // Implement edit functionality
+        console.log('Edit donation:', id);
+    };
+
+    const handleDelete = (id) => {
+        // Implement delete functionality
+        console.log('Delete donation:', id);
+    };
+
+    if (loading) {
+        return <div className="text-center py-4">Loading donations...</div>;
+    }
+
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <h1 className="text-2xl font-bold mb-6">Donation History</h1>
+            <DonationList 
+                donations={donations} 
+                showActions={true}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+            />
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
         </div>
     );
 };

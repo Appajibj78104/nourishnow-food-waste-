@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 const { v2: cloudinary } = require('cloudinary');
+=======
+const cloudinary = require('cloudinary').v2;
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
 const dotenv = require('dotenv');
 
 dotenv.config();

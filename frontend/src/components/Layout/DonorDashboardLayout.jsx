@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+<<<<<<< HEAD
 import { Link, useLocation } from 'react-router-dom';
+=======
+import { Link, useLocation, Outlet } from 'react-router-dom';
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
 import { 
     FaHome, FaHandHoldingHeart, FaHistory, 
     FaCog, FaComments, FaBell 
 } from 'react-icons/fa';
 
+<<<<<<< HEAD
 const DonorDashboardLayout = ({ children }) => {
+=======
+const DonorDashboardLayout = () => {
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
     const location = useLocation();
     const [notifications, setNotifications] = useState([]);
 
@@ -84,7 +92,11 @@ const DonorDashboardLayout = ({ children }) => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
                     >
+<<<<<<< HEAD
                         {children}
+=======
+                        <Outlet />
+>>>>>>> 7c904d1 (Saved local changes before pulling from remote)
                     </motion.div>
                 </div>
             </div>
