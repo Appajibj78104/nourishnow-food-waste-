@@ -1,241 +1,271 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import axios from 'axios';
+import { FaBullhorn, FaUsers, FaBuilding, FaGlobe } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import { useSocket } from '../../context/SocketContext';
-import { 
-  FaUsers, 
-  FaClock, 
-  FaCheckCircle, 
-  FaPaperPlane, 
-  FaTrash 
-} from 'react-icons/fa';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { useAuth } from '../../context/AuthContext';
+import ngoService from '../../services/ngoService';
 
 const Broadcasts = () => {
     const [broadcasts, setBroadcasts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [newBroadcast, setNewBroadcast] = useState({
-        title: '',
-        message: '',
-        targetAudience: 'all', // all, donors, volunteers
-        priority: 'normal' // normal, urgent
-    });
-    const { socket } = useSocket();
+    const [message, setMessage] = useState('');
+    const [title, setTitle] = useState('');
+    const [recipients, setRecipients] = useState('all'); // 'all', 'donors', 'admin'
+    const [sendingBroadcast, setSendingBroadcast] = useState(false);
+    const [filter, setFilter] = useState('all'); // 'all', 'received', 'sent'
+
+    const socket = useSocket();
+    const { user } = useAuth();
 
     useEffect(() => {
         fetchBroadcasts();
 
-        if (socket) {
-            socket.on('broadcastDelivered', (stats) => {
-                updateBroadcastStats(stats);
-            });
+        if (!socket || !user) return;
 
-            return () => socket.off('broadcastDelivered');
-        }
-    }, [socket]);
+        console.log('Setting up socket connection for broadcasts');
+        
+        socket.emit('joinBroadcastRoom', {
+            userId: user._id,
+            role: 'ngo'
+        });
+
+        socket.on('newBroadcast', (data) => {
+            console.log('New broadcast received:', data);
+            setBroadcasts(prev => [data.broadcast, ...prev]);
+            toast.info(`New broadcast: ${data.broadcast.title}`);
+        });
+
+        return () => {
+            if (socket) {
+                socket.emit('leaveBroadcastRoom', {
+                    userId: user._id,
+                    role: 'ngo'
+                });
+                socket.off('newBroadcast');
+            }
+        };
+    }, [socket, user]);
 
     const fetchBroadcasts = async () => {
         try {
-            const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/ngo/broadcasts`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                }
-            );
-            setBroadcasts(response.data);
-            setLoading(false);
+            setLoading(true);
+            const response = await ngoService.getBroadcasts();
+            if (response.success) {
+                setBroadcasts(response.data);
+            }
         } catch (error) {
             console.error('Error fetching broadcasts:', error);
+            toast.error('Failed to fetch broadcasts');
+        } finally {
             setLoading(false);
         }
     };
 
-    const sendBroadcast = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!title.trim() || !message.trim()) {
+            toast.error('Please fill in all fields');
+            return;
+        }
+
         try {
-            const response = await axios.post(
-                `${import.meta.env.VITE_API_URL}/ngo/broadcasts`,
-                newBroadcast,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                }
-            );
-            setBroadcasts(prev => [response.data, ...prev]);
-            setNewBroadcast({
-                title: '',
-                message: '',
-                targetAudience: 'all',
-                priority: 'normal'
+            setSendingBroadcast(true);
+            const response = await ngoService.createBroadcast({
+                title,
+                message,
+                recipients
             });
+
+            if (response.success) {
+                toast.success('Broadcast sent successfully');
+                setTitle('');
+                setMessage('');
+                setRecipients('all');
+                fetchBroadcasts();
+            }
         } catch (error) {
             console.error('Error sending broadcast:', error);
+            toast.error('Failed to send broadcast');
+        } finally {
+            setSendingBroadcast(false);
         }
     };
 
-    const deleteBroadcast = async (broadcastId) => {
-        try {
-            await axios.delete(
-                `${import.meta.env.VITE_API_URL}/ngo/broadcasts/${broadcastId}`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                }
-            );
-            setBroadcasts(prev => prev.filter(b => b._id !== broadcastId));
-        } catch (error) {
-            console.error('Error deleting broadcast:', error);
+    const filteredBroadcasts = broadcasts.filter(broadcast => {
+        if (filter === 'sent') {
+            return broadcast.sender?._id === user?._id;
         }
+        if (filter === 'received') {
+            return broadcast.sender?._id !== user?._id;
+        }
+        return true;
+    });
+
+    const getSenderRoleDisplay = (sender) => {
+        if (!sender || !sender.role) return 'UNKNOWN';
+        return sender.role.toUpperCase();
     };
 
-    const updateBroadcastStats = (stats) => {
-        setBroadcasts(prev => prev.map(broadcast => 
-            broadcast._id === stats.broadcastId 
-                ? { ...broadcast, deliveryStats: stats }
-                : broadcast
-        ));
+    const getSenderName = (sender) => {
+        return sender?.name || 'Unknown User';
     };
 
-    if (loading) return <LoadingSpinner />;
+    const renderBroadcastCard = (broadcast) => (
+        <div
+            key={broadcast._id}
+            className="bg-gray-700/50 rounded-lg p-4"
+        >
+            <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-white">{broadcast.title}</h3>
+                <div className="flex items-center space-x-2">
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                        broadcast.urgency === 'urgent' 
+                            ? 'bg-red-500/10 text-red-500' 
+                            : 'bg-blue-500/10 text-blue-500'
+                    }`}>
+                        {getSenderRoleDisplay(broadcast.sender)}
+                    </span>
+                    {broadcast.sender?._id === user?._id && (
+                        <span className="text-xs px-2 py-1 rounded-full bg-green-500/10 text-green-500">
+                            SENT
+                        </span>
+                    )}
+                </div>
+            </div>
+            <p className="text-gray-300 text-sm mb-2">{broadcast.message}</p>
+            <div className="flex justify-between text-xs text-gray-400">
+                <span>From: {getSenderName(broadcast.sender)}</span>
+                <span>To: {(broadcast.recipients || 'ALL').toUpperCase()}</span>
+                <span>{new Date(broadcast.createdAt).toLocaleDateString()}</span>
+            </div>
+        </div>
+    );
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
 
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold text-white mb-6">Broadcasts</h1>
+        <div className="p-6">
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-teal-500 bg-clip-text text-transparent">
+                    Broadcasts
+                </h1>
+                <p className="text-gray-400 mt-2">View and send broadcast messages</p>
+            </div>
 
-            {/* New Broadcast Form */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 mb-8"
-            >
-                <form onSubmit={sendBroadcast} className="space-y-4">
-                    <div>
-                        <label className="block text-gray-300 mb-2">Title</label>
-                        <input
-                            type="text"
-                            value={newBroadcast.title}
-                            onChange={(e) => setNewBroadcast({
-                                ...newBroadcast,
-                                title: e.target.value
-                            })}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
-                            placeholder="Broadcast title"
-                            required
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-gray-300 mb-2">Message</label>
-                        <textarea
-                            value={newBroadcast.message}
-                            onChange={(e) => setNewBroadcast({
-                                ...newBroadcast,
-                                message: e.target.value
-                            })}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white h-32"
-                            placeholder="Your message"
-                            required
-                        />
-                    </div>
-
-                    <div className="flex space-x-4">
-                        <div className="flex-1">
-                            <label className="block text-gray-300 mb-2">Target Audience</label>
-                            <select
-                                value={newBroadcast.targetAudience}
-                                onChange={(e) => setNewBroadcast({
-                                    ...newBroadcast,
-                                    targetAudience: e.target.value
-                                })}
-                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
-                            >
-                                <option value="all">All Users</option>
-                                <option value="donors">Donors Only</option>
-                                <option value="volunteers">Volunteers Only</option>
-                            </select>
-                        </div>
-
-                        <div className="flex-1">
-                            <label className="block text-gray-300 mb-2">Priority</label>
-                            <select
-                                value={newBroadcast.priority}
-                                onChange={(e) => setNewBroadcast({
-                                    ...newBroadcast,
-                                    priority: e.target.value
-                                })}
-                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
-                            >
-                                <option value="normal">Normal</option>
-                                <option value="urgent">Urgent</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="w-full bg-gradient-to-r from-blue-500 to-emerald-500 text-white py-2 rounded-lg hover:from-blue-600 hover:to-emerald-600"
-                    >
-                        <FaPaperPlane className="inline mr-2" />
-                        Send Broadcast
-                    </button>
-                </form>
-            </motion.div>
-
-            {/* Broadcasts List */}
-            <div className="space-y-4">
-                {broadcasts.map(broadcast => (
-                    <motion.div
-                        key={broadcast._id}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Broadcast Form */}
+                <div className="lg:col-span-1">
+                    <motion.div 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`bg-white/5 backdrop-blur-lg rounded-xl p-6 border ${
-                            broadcast.priority === 'urgent' 
-                                ? 'border-red-500/50' 
-                                : 'border-white/10'
-                        }`}
+                        className="bg-gray-800 rounded-xl p-6"
                     >
-                        <div className="flex justify-between items-start mb-4">
-                            <div>
-                                <h3 className="text-lg font-semibold text-white">
-                                    {broadcast.title}
-                                </h3>
-                                <p className="text-gray-400 mt-1">
-                                    {broadcast.message}
-                                </p>
+                        <h2 className="text-xl font-semibold text-white mb-4">Send Broadcast</h2>
+                        <form onSubmit={handleSubmit}>
+                            <div className="mb-4">
+                                <label className="block text-gray-300 mb-2">Recipients</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {[
+                                        { value: 'all', label: 'Everyone', icon: FaGlobe },
+                                        { value: 'donors', label: 'Donors', icon: FaUsers },
+                                        { value: 'admin', label: 'Admin', icon: FaBuilding }
+                                    ].map((option) => (
+                                        <button
+                                            key={option.value}
+                                            type="button"
+                                            onClick={() => setRecipients(option.value)}
+                                            className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${
+                                                recipients === option.value
+                                                    ? 'bg-blue-600 text-white'
+                                                    : 'bg-gray-700 text-gray-300'
+                                            }`}
+                                        >
+                                            <option.icon className="w-4 h-4" />
+                                            <span>{option.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            <button
-                                onClick={() => deleteBroadcast(broadcast._id)}
-                                className="text-gray-400 hover:text-red-500"
-                            >
-                                <FaTrash />
-                            </button>
-                        </div>
 
-                        <div className="flex items-center space-x-4 text-sm text-gray-400">
-                            <span className="flex items-center">
-                                <FaUsers className="mr-1" />
-                                {broadcast.targetAudience}
-                            </span>
-                            <span className="flex items-center">
-                                <FaClock className="mr-1" />
-                                {new Date(broadcast.createdAt).toLocaleDateString()}
-                            </span>
-                            {broadcast.deliveryStats && (
-                                <span className="flex items-center text-green-500">
-                                    <FaCheckCircle className="mr-1" />
-                                    Delivered: {broadcast.deliveryStats.delivered}
-                                </span>
-                            )}
+                            <div className="mb-4">
+                                <label className="block text-gray-300 mb-2">Title</label>
+                                <input
+                                    type="text"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    className="w-full bg-gray-700 text-white rounded-lg p-3"
+                                    placeholder="Enter message title"
+                                />
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-gray-300 mb-2">Message</label>
+                                <textarea
+                                    value={message}
+                                    onChange={(e) => setMessage(e.target.value)}
+                                    className="w-full bg-gray-700 text-white rounded-lg p-3 min-h-[150px]"
+                                    placeholder="Enter your message"
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={sendingBroadcast}
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg flex items-center justify-center space-x-2"
+                            >
+                                {sendingBroadcast ? (
+                                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+                                ) : (
+                                    <>
+                                        <FaBullhorn className="w-5 h-5" />
+                                        <span>Send Message</span>
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                    </motion.div>
+                </div>
+
+                {/* Broadcasts List */}
+                <div className="lg:col-span-2">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-gray-800 rounded-xl p-6"
+                    >
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-semibold text-white">Broadcasts</h2>
+                            <div className="flex space-x-2">
+                                {['all', 'received', 'sent'].map((filterOption) => (
+                                    <button
+                                        key={filterOption}
+                                        onClick={() => setFilter(filterOption)}
+                                        className={`px-4 py-2 rounded-lg capitalize ${
+                                            filter === filterOption
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-gray-700 text-gray-300'
+                                        }`}
+                                    >
+                                        {filterOption}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            {filteredBroadcasts.map(broadcast => renderBroadcastCard(broadcast))}
                         </div>
                     </motion.div>
-                ))}
+                </div>
             </div>
         </div>
     );
 };
 
-export default Broadcasts; 
+export default Broadcasts;

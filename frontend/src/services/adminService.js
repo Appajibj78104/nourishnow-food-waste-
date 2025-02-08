@@ -1,5 +1,6 @@
-const api = require('./api');
-const axios = require('axios');
+import axios from 'axios';
+
+const API_URL = '/api/admin';
 
 const adminService = {
     getAdminDashboardData: async () => {
@@ -41,9 +42,18 @@ const adminService = {
         return response.data;
     },
 
-    getAnalytics: async (params) => {
-        const response = await api.get('/admin/analytics', { params });
-        return response.data;
+    getAnalytics: async (timeframe = 'month') => {
+        try {
+            const response = await axios.get(`/api/admin/dashboard/analytics?timeframe=${timeframe}`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching analytics:', error);
+            throw error.response?.data || { message: 'Failed to fetch analytics' };
+        }
     },
 
     updateSystemSettings: async (settings) => {
@@ -70,7 +80,169 @@ const adminService = {
     getSystemHealth: async () => {
         const response = await axios.get('/api/admin/system/health');
         return response.data;
+    },
+
+    getDashboardStats: async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No auth token found');
+            }
+
+            const response = await axios.get(`${API_URL}/dashboard/stats`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching dashboard stats:', error);
+            throw error.response?.data || { message: 'Failed to fetch dashboard stats' };
+        }
+    },
+
+    getAllUsers: async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No auth token found');
+            }
+
+            const response = await axios.get(`${API_URL}/users`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            throw error.response?.data || { message: 'Failed to fetch users' };
+        }
+    },
+
+    verifyUser: async (userId, isNGO = false) => {
+        try {
+            const response = await axios.patch(
+                `${API_URL}/users/${userId}/verify`,
+                { isNGO },
+                {
+                    headers: {
+                        Authorization: localStorage.getItem('token')
+                    }
+                }
+            );
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    updateUserStatus: async (userId, status) => {
+        try {
+            const response = await axios.patch(
+                `${API_URL}/users/${userId}/status`,
+                { status },
+                {
+                    headers: {
+                        Authorization: localStorage.getItem('token')
+                    }
+                }
+            );
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getAllDonations: async () => {
+        try {
+            const response = await axios.get(`${API_URL}/donations`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { message: 'Failed to fetch donations' };
+        }
+    },
+
+    getVerifiedNGOs: async () => {
+        try {
+            const response = await axios.get(`${API_URL}/ngos/verified`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { message: 'Failed to fetch NGOs' };
+        }
+    },
+
+    assignDonation: async (donationId, ngoId) => {
+        try {
+            const response = await axios.patch(
+                `${API_URL}/donations/${donationId}/assign`,
+                { ngoId },
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                    }
+                }
+            );
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { message: 'Failed to assign donation' };
+        }
+    },
+
+    updateDonationStatus: async (donationId, status) => {
+        try {
+            const response = await axios.patch(
+                `${API_URL}/donations/${donationId}/status`,
+                { status },
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                    }
+                }
+            );
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { message: 'Failed to update status' };
+        }
+    },
+
+    getBroadcasts: async () => {
+        try {
+            const response = await axios.get(`${API_URL}/broadcasts`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { message: 'Failed to fetch broadcasts' };
+        }
+    },
+
+    createBroadcast: async (broadcastData) => {
+        try {
+            const response = await axios.post(
+                `${API_URL}/broadcasts`,
+                broadcastData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                    }
+                }
+            );
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { message: 'Failed to create broadcast' };
+        }
     }
 };
 
-module.exports = adminService; 
+export default adminService; 

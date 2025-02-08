@@ -105,7 +105,6 @@ import Chat from './pages/shared/Chat';
 import Settings from './pages/shared/Settings';
 import Pickups from './pages/ngo/Pickups';
 import Inventory from './pages/ngo/Inventory';
-import Analytics from './pages/ngo/Analytics';
 import Broadcasts from './pages/ngo/Broadcasts';
 import HomePage from './components/HomePage';
 import AdminRoutes from './routes/AdminRoutes';
@@ -116,6 +115,18 @@ import 'react-toastify/dist/ReactToastify.css';
 =======
 import axios from 'axios';
 import { PrivateRoute } from './components/routing/PrivateRoute';
+import { NGOProvider } from './context/NGOContext';
+import { SocketProvider } from './context/SocketContext';
+import InventoryManager from './pages/ngo/components/InventoryManager';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminLayout from './components/Layout/AdminLayout';
+import UserManagement from './pages/admin/UserManagement';
+import DonationManagement from './pages/admin/DonationManagement';
+import AdminAnalytics from './pages/admin/Analytics';
+import Broadcast from './pages/admin/Broadcast';
+import DonorBroadcasts from './pages/donor/Broadcasts';
+import NGOAnalytics from './pages/ngo/Analytics';
+import AdminInventory from './pages/admin/Inventory';
 
 const setupAxiosInterceptors = () => {
     axios.interceptors.request.use(
@@ -150,6 +161,7 @@ function App() {
     return (
         <Router>
             <AuthProvider>
+<<<<<<< HEAD
 <<<<<<< HEAD
                 <ToastContainer />
                 <Routes>
@@ -203,40 +215,67 @@ function App() {
                     <Route path="/" element={<HomePage />} />
                     <Route path="/login" element={<LoginForm />} />
                     <Route path="/register" element={<RegisterForm />} />
+=======
+                <NGOProvider>
+                    <SocketProvider>
+                        <ToastContainer position="top-right" autoClose={3000} />
+                        <Routes>
+                            <Route path="/" element={<HomePage />} />
+                            <Route path="/login" element={<LoginForm />} />
+                            <Route path="/register" element={<RegisterForm />} />
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
 
-                    {/* Protected Donor Routes */}
-                    <Route path="/donor/*" element={<PrivateRoute allowedRoles={['donor']} />}>
-                        <Route element={<DonorDashboardLayout />}>
-                            <Route index element={<Navigate to="dashboard" replace />} />
-                            <Route path="dashboard" element={<DonorDashboard />} />
-                            <Route path="create" element={<CreateDonation />} />
-                            <Route path="history" element={<DonationHistory />} />
-                            <Route path="chat" element={<Chat />} />
-                            <Route path="settings" element={<Settings />} />
-                        </Route>
-                    </Route>
+                            {/* Protected Donor Routes */}
+                            <Route path="/donor/*" element={<PrivateRoute allowedRoles={['donor']} />}>
+                                <Route element={<DonorDashboardLayout />}>
+                                    <Route index element={<Navigate to="dashboard" replace />} />
+                                    <Route path="dashboard" element={<DonorDashboard />} />
+                                    <Route path="create" element={<CreateDonation />} />
+                                    <Route path="history" element={<DonationHistory />} />
+                                    <Route path="broadcasts" element={<DonorBroadcasts />} />
+                                    <Route path="chat" element={<Chat />} />
+                                    <Route path="settings" element={<Settings />} />
+                                </Route>
+                            </Route>
 
-                    {/* Protected NGO Routes */}
-                    <Route path="/ngo/*" element={<PrivateRoute allowedRoles={['ngo']} />}>
-                        <Route element={<DashboardLayout />}>
-                            <Route path="dashboard" element={<NGODashboard />} />
-                            <Route path="pickups" element={<Pickups />} />
-                            <Route path="inventory" element={<Inventory />} />
-                            <Route path="analytics" element={<Analytics />} />
-                            <Route path="chat" element={<Chat />} />
-                            <Route path="broadcasts" element={<Broadcasts />} />
-                            <Route path="settings" element={<Settings />} />
-                        </Route>
-                    </Route>
+                            {/* Protected NGO Routes */}
+                            <Route path="/ngo/*" element={<PrivateRoute allowedRoles={['ngo']} />}>
+                                <Route element={<DashboardLayout />}>
+                                    <Route path="dashboard" element={<NGODashboard />} />
+                                    <Route path="donations" element={<NGODonations />} />
+                                    <Route path="pickups" element={<Pickups />} />
+                                    <Route path="inventory" element={<InventoryManager />} />
+                                    <Route path="analytics" element={<NGOAnalytics />} />
+                                    <Route path="broadcasts" element={<Broadcasts />} />
+                                    <Route path="chat" element={<Chat />} />
+                                    <Route path="settings" element={<Settings />} />
+                                </Route>
+                            </Route>
 
-                    {/* Admin Routes */}
-                    <Route path="/admin/*" element={<PrivateRoute allowedRoles={['admin']} />}>
-                        <Route element={<AdminRoutes />} />
-                    </Route>
+                            {/* Admin Routes */}
+                            <Route path="/admin/*" element={<PrivateRoute allowedRoles={['admin']} />}>
+                                <Route element={<AdminLayout />}>
+                                    <Route index element={<Navigate to="dashboard" replace />} />
+                                    <Route path="dashboard" element={<AdminDashboard />} />
+                                    <Route path="users" element={<UserManagement />} />
+                                    <Route path="donations" element={<DonationManagement />} />
+                                    <Route path="analytics" element={<AdminAnalytics />} />
+                                    <Route path="settings" element={<Settings />} />
+                                    <Route path="broadcast" element={<Broadcast />} />
+                                    <Route path="inventory" element={<AdminInventory />} />
+                                </Route>
+                            </Route>
 
+<<<<<<< HEAD
                     <Route path="*" element={<Navigate to="/" replace />} />
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
                 </Routes>
+=======
+                            <Route path="*" element={<Navigate to="/" replace />} />
+                        </Routes>
+                    </SocketProvider>
+                </NGOProvider>
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
             </AuthProvider>
         </Router>
     );

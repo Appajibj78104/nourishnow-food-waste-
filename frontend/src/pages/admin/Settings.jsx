@@ -3,7 +3,7 @@ import {
     Box,
     Typography,
     Paper,
-    Grid2,
+    Grid,
     TextField,
     Switch,
     FormControlLabel,

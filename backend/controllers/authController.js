@@ -1,6 +1,6 @@
-const User = require('../models/User.js') ;
+const User = require('../models/User');
 //import NGO from '../models/NGO.js';
-const NGO = require('../models/NGO.js')
+const NGO = require('../models/NGO');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { uploadToCloudinary } = require('../utils/cloudinary.js');
@@ -8,6 +8,8 @@ const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail.js');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
 dotenv.config();
 
 <<<<<<< HEAD
@@ -34,9 +36,9 @@ dotenv.config();
 // Register user
 const register = async (req, res) => {
     try {
-        const { email, password, name, role } = req.body;
-        console.log('Registration attempt:', { email, name, role });
+        const { name, email, password, role } = req.body;
 
+<<<<<<< HEAD
         // Check if user already exists
         let user = await User.findOne({ email: email.toLowerCase() });
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
@@ -92,10 +94,26 @@ const register = async (req, res) => {
         user = new User({
             email: email.toLowerCase(),
             password: hashedPassword,
+=======
+        // Check if user exists
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({
+                success: false,
+                message: 'User already exists'
+            });
+        }
+
+        // Create user first
+        const user = await User.create({
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
             name,
-            role: role || 'donor'
+            email,
+            password: await bcrypt.hash(password, 10),
+            role
         });
 
+<<<<<<< HEAD
         await user.save();
         console.log('User saved successfully');
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
@@ -117,17 +135,41 @@ const register = async (req, res) => {
                 ngoProfile: ngo
 =======
         // If user is NGO, create NGO profile
+=======
+        // If role is NGO, create simple NGO profile
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
         if (role === 'ngo') {
-            const ngo = new NGO({
-                user: user._id,
-                name: name
-            });
-            await ngo.save();
+            try {
+                await NGO.create({
+                    user: user._id,
+                    name: name
+                });
+            } catch (ngoError) {
+                // If NGO creation fails, delete the user
+                await User.findByIdAndDelete(user._id);
+                console.error('NGO creation error:', ngoError);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to create NGO profile'
+                });
+            }
         }
 
-        res.status(201).json({
+        // Generate token
+        const token = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: '30d' }
+        );
+
+        // Remove password from response
+        const userResponse = user.toObject();
+        delete userResponse.password;
+
+        return res.status(201).json({
             success: true,
             token,
+<<<<<<< HEAD
             user: {
                 id: user._id,
                 name: user.name,
@@ -143,15 +185,33 @@ const register = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
 =======
         res.status(500).json({ 
+=======
+            user: userResponse
+        });
+
+    } catch (error) {
+        console.error('Registration error:', error);
+        
+        // If user was created, clean it up
+        if (error.code === 11000) {
+            const email = error.keyValue?.email;
+            return res.status(400).json({
+                success: false,
+                message: `Account with email ${email} already exists`
+            });
+        }
+
+        return res.status(500).json({
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
             success: false,
-            message: 'Server error during registration',
-            error: error.message 
+            message: 'Registration failed'
         });
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
     }
 };
 
 // Login
+<<<<<<< HEAD
 <<<<<<< HEAD
  const login = async (req, res) => {
     try {
@@ -242,8 +302,42 @@ const login = async (req, res) => {
             message: 'Server error during login'
         });
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
+=======
+const login = catchAsync(async (req, res) => {
+    const { email, password } = req.body;
+
+    // Check if email and password exist
+    if (!email || !password) {
+        throw new AppError('Please provide email and password', 400);
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
     }
-};
+
+    // Find user and include password field
+    const user = await User.findOne({ email }).select('+password');
+
+    if (!user || !(await user.matchPassword(password))) {
+        throw new AppError('Invalid credentials', 401);
+    }
+
+    // Check if user is disabled
+    if (user.status === 'disabled') {
+        throw new AppError('Your account has been disabled. Please contact support.', 403);
+    }
+
+    // Generate token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: '30d'
+    });
+
+    // Remove password from response
+    user.password = undefined;
+
+    res.json({
+        success: true,
+        token,
+        user
+    });
+});
 
 // Check Auth Status
 <<<<<<< HEAD
@@ -349,6 +443,7 @@ const refreshToken = async (req, res) => {
  const forgotPassword = async (req, res) => {
 =======
 const forgotPassword = async (req, res) => {
+<<<<<<< HEAD
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
     try {
         const { email } = req.body;
@@ -391,12 +486,20 @@ const forgotPassword = async (req, res) => {
         console.error('Forgot Password Error:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
+=======
+    // Implement forgot password logic
+    res.status(501).json({
+        success: false,
+        message: 'Not implemented yet'
+    });
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
 };
 
 <<<<<<< HEAD
  const resetPassword = async (req, res) => {
 =======
 const resetPassword = async (req, res) => {
+<<<<<<< HEAD
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
     try {
         const { token, password } = req.body;
@@ -432,6 +535,13 @@ const resetPassword = async (req, res) => {
         console.error('Reset Password Error:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
+=======
+    // Implement reset password logic
+    res.status(501).json({
+        success: false,
+        message: 'Not implemented yet'
+    });
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
 };
 
 // Add BlacklistedToken model to handle logout
@@ -477,56 +587,53 @@ const checkTokenBlacklist = async (req, res, next) => {
  const getMe = async (req, res) => {
 =======
 
+// Get current user
 const getMe = async (req, res) => {
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
     try {
-        const user = await User.findById(req.user._id);
-        if (user) {
-            res.json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role
-            });
-        } else {
-            res.status(404).json({ message: 'User not found' });
-        }
+        const user = await User.findById(req.user.id);
+        res.json({
+            success: true,
+            data: user
+        });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Get user error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error getting user data',
+            error: error.message
+        });
     }
 };
 
+<<<<<<< HEAD
 // Update user profile
 <<<<<<< HEAD
  const updateProfile = async (req, res) => {
 =======
+=======
+// Update profile
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
 const updateProfile = async (req, res) => {
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
     try {
-        const user = await User.findById(req.user._id);
+        const user = await User.findByIdAndUpdate(
+            req.user.id,
+            req.body,
+            { new: true, runValidators: true }
+        );
 
-        if (user) {
-            user.name = req.body.name || user.name;
-            user.email = req.body.email || user.email;
-
-            if (req.body.password) {
-                user.password = req.body.password;
-            }
-
-            const updatedUser = await user.save();
-
-            res.json({
-                _id: updatedUser._id,
-                name: updatedUser.name,
-                email: updatedUser.email,
-                role: updatedUser.role,
-                token: createToken(updatedUser._id)
-            });
-        } else {
-            res.status(404).json({ message: 'User not found' });
-        }
+        res.json({
+            success: true,
+            data: user
+        });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Update profile error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating profile',
+            error: error.message
+        });
     }
 };
 <<<<<<< HEAD

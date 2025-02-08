@@ -11,8 +11,12 @@ import { FaUser, FaBox, FaHistory, FaCog, FaPlus, FaTrophy, FaSignOutAlt } from 
 import QuickStats from './components/QuickStats';
 import DonationList from './components/DonationList';
 import DonationForm from './components/DonationForm';
+<<<<<<< HEAD
 import { getDonorStats, getDonations, editDonation, deleteDonation } from './services/donorService';
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
+=======
+import { getDonorStats, getDonations, editDonation, deleteDonation, getDonorDonations } from './services/donorService';
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
 import DonorProfile from './components/DonorProfile';
 import Leaderboard from './components/Leaderboard';
 import ImpactChart from './components/ImpactChart';
@@ -40,6 +44,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import DonationSuccessCard from './components/DonationSuccessCard';
 
 const DonorDashboard = () => {
     const { t } = useTranslation();
@@ -57,6 +62,8 @@ const DonorDashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [showLeaderboard, setShowLeaderboard] = useState(false);
     const [editingDonation, setEditingDonation] = useState(null);
+    const [showSuccessCard, setShowSuccessCard] = useState(false);
+    const [successDonation, setSuccessDonation] = useState(null);
 
     useEffect(() => {
         if (!isAuthenticated) {
@@ -135,6 +142,7 @@ const DonorDashboard = () => {
     );
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     if (isLoading) {
 =======
     const handleDonationSubmit = (newDonation) => {
@@ -142,6 +150,33 @@ const DonorDashboard = () => {
         setShowDonationForm(false);
         // Optionally refresh the stats
         fetchDashboardData();
+=======
+    const handleDonationSubmit = async (donationData) => {
+        try {
+            let response;
+            if (editingDonation) {
+                response = await editDonation(editingDonation._id, donationData);
+                setDonations(prevDonations => 
+                    prevDonations.map(d => 
+                        d._id === editingDonation._id ? response.data : d
+                    )
+                );
+                toast.success('Donation updated successfully');
+            } else {
+                response = await getDonorDonations(donationData);
+                setDonations(prevDonations => [response.data, ...prevDonations]);
+                setSuccessDonation(response.data);
+                setShowSuccessCard(true);
+                setTimeout(() => setShowSuccessCard(false), 5000);
+                toast.success('Donation created successfully');
+            }
+            setShowDonationForm(false);
+            setEditingDonation(null);
+        } catch (error) {
+            console.error('Error saving donation:', error);
+            toast.error(error.response?.data?.message || 'Failed to save donation');
+        }
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
     };
 
     const statCards = [
@@ -452,31 +487,20 @@ const DonorDashboard = () => {
                         setShowDonationForm(false);
                         setEditingDonation(null);
                     }}
-                    onSubmit={async (donationData) => {
-                        try {
-                            let response;
-                            if (editingDonation) {
-                                response = await editDonation(editingDonation._id, donationData);
-                                setDonations(prevDonations => 
-                                    prevDonations.map(d => 
-                                        d._id === editingDonation._id ? response.data : d
-                                    )
-                                );
-                                toast.success('Donation updated successfully');
-                            } else {
-                                response = await handleDonationSubmit(donationData);
-                                toast.success('Donation created successfully');
-                            }
-                            setShowDonationForm(false);
-                        } catch (error) {
-                            console.error('Error saving donation:', error);
-                            toast.error(error.response?.data?.message || 'Failed to save donation');
-                        }
-                    }}
+                    onSubmit={handleDonationSubmit}
                     initialData={editingDonation}
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
                 />
             )}
+
+            {showSuccessCard && (
+                <DonationSuccessCard
+                    show={showSuccessCard}
+                    onClose={() => setShowSuccessCard(false)}
+                    donation={successDonation}
+                />
+            )}
+            
         </div>
     );
 };

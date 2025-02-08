@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { createDonation } from '../services/donorService';
@@ -17,19 +18,32 @@ const DonationForm = ({ onClose, onSubmit }) => {
 =======
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+=======
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaTimes, FaUtensils, FaBox, FaCarrot, FaQuestionCircle } from 'react-icons/fa';
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
 import { toast } from 'react-toastify';
 
 const DonationForm = ({ onClose, onSubmit, initialData }) => {
     const [formData, setFormData] = useState({
-        foodType: '',
-        quantity: '',
-        expiryDate: '',
-        pickupTime: '',
-        description: ''
+        foodType: initialData?.foodType || '',
+        quantity: initialData?.quantity || '',
+        unit: initialData?.unit || 'kgs',
+        expiryDate: initialData?.expiryDate ? new Date(initialData.expiryDate).toISOString().split('T')[0] : '',
+        pickupTime: initialData?.pickupTime ? new Date(initialData.pickupTime).toISOString().split('T')[0] : '',
+        description: initialData?.description || '',
+        pickupAddress: {
+            street: initialData?.pickupAddress?.street || '',
+            district: initialData?.pickupAddress?.district || '',
+            state: initialData?.pickupAddress?.state || '',
+            pincode: initialData?.pickupAddress?.pincode || ''
+        }
     });
 
     const [loading, setLoading] = useState(false);
 
+<<<<<<< HEAD
     // Initialize form with existing data if editing
     useEffect(() => {
         if (initialData) {
@@ -43,13 +57,32 @@ const DonationForm = ({ onClose, onSubmit, initialData }) => {
         }
     }, [initialData]);
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
+=======
+    const foodTypeIcons = {
+        cooked: FaUtensils,
+        packaged: FaBox,
+        raw: FaCarrot,
+        other: FaQuestionCircle
+    };
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        if (name.startsWith('pickupAddress.')) {
+            const addressField = name.split('.')[1];
+            setFormData(prev => ({
+                ...prev,
+                pickupAddress: {
+                    ...prev.pickupAddress,
+                    [addressField]: value
+                }
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
     };
 
 <<<<<<< HEAD
@@ -78,38 +111,11 @@ const DonationForm = ({ onClose, onSubmit, initialData }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-
         try {
-            // Validate required fields
-            const requiredFields = ['foodType', 'quantity', 'expiryDate', 'pickupTime'];
-            for (const field of requiredFields) {
-                if (!formData[field]) {
-                    throw new Error(`${field.charAt(0).toUpperCase() + field.slice(1)} is required`);
-                }
-            }
-
-            // Validate dates
-            const now = new Date();
-            const expiry = new Date(formData.expiryDate);
-            const pickup = new Date(formData.pickupTime);
-
-            if (expiry < now) {
-                throw new Error('Expiry date cannot be in the past');
-            }
-
-            if (pickup < now) {
-                throw new Error('Pickup time cannot be in the past');
-            }
-
-            if (pickup > expiry) {
-                throw new Error('Pickup time must be before expiry date');
-            }
-
             await onSubmit(formData);
             onClose();
         } catch (error) {
-            console.error('Form submission error:', error);
-            toast.error(error.message || 'Failed to save donation');
+            toast.error(error.message);
         } finally {
             setLoading(false);
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
@@ -117,6 +123,7 @@ const DonationForm = ({ onClose, onSubmit, initialData }) => {
     };
 
     return (
+<<<<<<< HEAD
 <<<<<<< HEAD
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <motion.div
@@ -161,17 +168,34 @@ const DonationForm = ({ onClose, onSubmit, initialData }) => {
                             <option value="other" className="bg-[#111827]">Other</option>
 =======
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+=======
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        >
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
             <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-gray-800/90 backdrop-blur-lg rounded-2xl p-8 max-w-lg w-full mx-4 border border-gray-700"
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+                className="bg-gray-800 rounded-xl p-6 w-full max-w-md relative"
             >
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                >
+                    <FaTimes />
+                </button>
+
                 <h2 className="text-2xl font-bold text-white mb-6">
                     {initialData ? 'Edit Donation' : 'Create New Donation'}
                 </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Food Type Selection */}
                     <div>
+<<<<<<< HEAD
                         <label className="block text-gray-300 mb-2">Food Type</label>
                         <select
                             name="foodType"
@@ -255,18 +279,162 @@ const DonationForm = ({ onClose, onSubmit, initialData }) => {
                             required
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
                         />
+=======
+                        <label className="text-gray-300 block mb-2">Food Type</label>
+                        <div className="grid grid-cols-2 gap-4">
+                            {Object.entries(foodTypeIcons).map(([type, Icon]) => (
+                                <button
+                                    key={type}
+                                    type="button"
+                                    onClick={() => handleChange({ target: { name: 'foodType', value: type } })}
+                                    className={`p-4 rounded-lg border ${
+                                        formData.foodType === type
+                                            ? 'border-blue-500 bg-blue-500/10'
+                                            : 'border-gray-600 hover:border-gray-500'
+                                    } flex items-center space-x-2`}
+                                >
+                                    <Icon className="text-gray-400" />
+                                    <span className="capitalize text-gray-300">
+                                        {type}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
+                    {/* Quantity and Unit */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-gray-300">Quantity</label>
+                            <input
+                                type="number"
+                                name="quantity"
+                                value={formData.quantity}
+                                onChange={handleChange}
+                                className="w-full p-2 bg-gray-700 rounded border border-gray-600 text-white"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="text-gray-300">Unit</label>
+                            <select
+                                name="unit"
+                                value={formData.unit}
+                                onChange={handleChange}
+                                className="w-full p-2 bg-gray-700 rounded border border-gray-600 text-white"
+                                required
+                            >
+                                <option value="kgs">Kilograms</option>
+                                <option value="items">Items</option>
+                                <option value="meals">Meals</option>
+                                <option value="packages">Packages</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Dates */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-gray-300">Expiry Date</label>
+                            <input
+                                type="date"
+                                name="expiryDate"
+                                value={formData.expiryDate}
+                                onChange={handleChange}
+                                className="w-full p-2 bg-gray-700 rounded border border-gray-600 text-white"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="text-gray-300">Pickup Time</label>
+                            <input
+                                type="datetime-local"
+                                name="pickupTime"
+                                value={formData.pickupTime}
+                                onChange={handleChange}
+                                className="w-full p-2 bg-gray-700 rounded border border-gray-600 text-white"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    {/* Address Fields */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-white">Pickup Address</h3>
+                        
+                        <div>
+                            <label className="text-gray-300">Street Address</label>
+                            <input
+                                type="text"
+                                name="pickupAddress.street"
+                                value={formData.pickupAddress.street}
+                                onChange={handleChange}
+                                className="w-full p-2 bg-gray-700 rounded border border-gray-600 text-white"
+                                required
+                                placeholder="Enter street address"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-gray-300">District</label>
+                            <input
+                                type="text"
+                                name="pickupAddress.district"
+                                value={formData.pickupAddress.district}
+                                onChange={handleChange}
+                                className="w-full p-2 bg-gray-700 rounded border border-gray-600 text-white"
+                                required
+                                placeholder="Enter district"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-gray-300">State</label>
+                            <input
+                                type="text"
+                                name="pickupAddress.state"
+                                value={formData.pickupAddress.state}
+                                onChange={handleChange}
+                                className="w-full p-2 bg-gray-700 rounded border border-gray-600 text-white"
+                                required
+                                placeholder="Enter state"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-gray-300">Pincode</label>
+                            <input
+                                type="text"
+                                name="pickupAddress.pincode"
+                                value={formData.pickupAddress.pincode}
+                                onChange={handleChange}
+                                pattern="\d{6}"
+                                maxLength="6"
+                                className="w-full p-2 bg-gray-700 rounded border border-gray-600 text-white"
+                                required
+                                placeholder="Enter 6-digit pincode"
+                            />
+                            <small className="text-gray-400">Enter 6-digit pincode</small>
+                        </div>
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
+                    </div>
+
+                    {/* Description */}
                     <div>
+<<<<<<< HEAD
 <<<<<<< HEAD
                         <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
 =======
                         <label className="block text-gray-300 mb-2">Description (Optional)</label>
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
+=======
+                        <label className="text-gray-300">Description</label>
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
                         <textarea
                             name="description"
                             value={formData.description}
                             onChange={handleChange}
+<<<<<<< HEAD
 <<<<<<< HEAD
                             rows="3"
                             className="w-full rounded-xl bg-white/5 border border-white/10 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -319,9 +487,27 @@ const DonationForm = ({ onClose, onSubmit, initialData }) => {
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
                         </button>
                     </div>
+=======
+                            className="w-full p-2 bg-gray-700 rounded border border-gray-600 text-white"
+                            rows="3"
+                            placeholder="Add any additional details about the donation"
+                        />
+                    </div>
+
+                    {/* Submit Button */}
+                    <motion.button
+                        type="submit"
+                        disabled={loading}
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-500 to-emerald-500 text-white font-semibold hover:from-blue-600 hover:to-emerald-600 transition-all duration-200 shadow-lg disabled:opacity-50"
+                    >
+                        {loading ? 'Saving...' : initialData ? 'Update Donation' : 'Create Donation'}
+                    </motion.button>
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
                 </form>
             </motion.div>
-        </div>
+        </motion.div>
     );
 };
 

@@ -49,6 +49,15 @@ userSchema.pre('save', async function(next) {
         enum: ['donor', 'ngo', 'admin'],
         default: 'donor'
     },
+    status: {
+        type: String,
+        enum: ['active', 'disabled'],
+        default: 'active'
+    },
+    verified: {
+        type: Boolean,
+        default: false
+    },
     phone: {
         type: String,
         default: ''
@@ -86,15 +95,8 @@ userSchema.pre('save', async function(next) {
     }
 }, { timestamps: true });
 
-// Remove the pre-save hook temporarily to debug
-// We'll handle password hashing in the controller
-
 // Method to compare passwords
 userSchema.methods.matchPassword = async function(enteredPassword) {
-    console.log('Comparing passwords:', {
-        entered: enteredPassword,
-        stored: this.password
-    });
     return await bcrypt.compare(enteredPassword, this.password);
 };
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)

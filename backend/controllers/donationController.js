@@ -7,6 +7,9 @@ const getDonations = async (req, res) => {
 =======
 const Donor = require('../models/Donor');
 const { uploadToCloudinary } = require('../utils/cloudinaryUpload');
+const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
+const { getDashboardStats } = require('./dashboardController');
 
 const getDonations = async (req, res) => {
     try {
@@ -39,21 +42,40 @@ const getDonationById = async (req, res) => {
     }
 };
 
-const updateDonationStatus = async (req, res) => {
-    try {
-        const donation = await Donation.findByIdAndUpdate(
-            req.params.id,
-            { status: req.body.status },
-            { new: true }
-        );
-        if (!donation) {
-            return res.status(404).json({ message: 'Donation not found' });
-        }
-        res.json(donation);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+const updateDonationStatus = catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const donation = await Donation.findById(id);
+    if (!donation) {
+        throw new AppError('Donation not found', 404);
     }
-};
+
+    // Update donation status
+    donation.status = status;
+
+    // If completing the donation, add completion details
+    if (status === 'completed') {
+        donation.completionDetails = {
+            completedAt: new Date(),
+            completedBy: req.user._id
+        };
+    }
+
+    await donation.save();
+
+    // Notify relevant parties through socket.io
+    const io = req.app.get('io');
+    io.to(`ngo:${donation.assignedNGO}`).emit('donationStatusUpdated', {
+        donationId: donation._id,
+        status: donation.status
+    });
+
+    res.json({
+        success: true,
+        data: donation
+    });
+});
 
 <<<<<<< HEAD
 module.exports = {
@@ -88,14 +110,38 @@ const createDonation = async (req, res) => {
         console.log('Request body:', req.body);
 
         // Validate required fields
-        const requiredFields = ['foodType', 'quantity', 'expiryDate', 'pickupTime'];
+        const requiredFields = [
+            'foodType', 
+            'quantity', 
+            'unit',
+            'expiryDate', 
+            'pickupTime',
+            'pickupAddress.street',
+            'pickupAddress.district',
+            'pickupAddress.state',
+            'pickupAddress.pincode'
+        ];
+
         for (const field of requiredFields) {
-            if (!req.body[field]) {
+            const value = field.includes('.')
+                ? field.split('.').reduce((obj, key) => obj?.[key], req.body)
+                : req.body[field];
+
+            if (!value) {
                 return res.status(400).json({
                     success: false,
-                    message: `${field} is required`
+                    message: `${field.split('.').pop()} is required`
                 });
             }
+        }
+
+        // Validate pincode
+        const pincodeRegex = /^\d{6}$/;
+        if (!pincodeRegex.test(req.body.pickupAddress.pincode)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please enter a valid 6-digit pincode'
+            });
         }
 
         // Parse and validate dates
@@ -116,16 +162,11 @@ const createDonation = async (req, res) => {
             });
         }
 
+        // Create new donation
         const donation = new Donation({
+            ...req.body,
             donor: req.user._id,
-            foodType: req.body.foodType,
-            quantity: parseInt(req.body.quantity),
-            quantityUnit: req.body.quantityUnit || 'servings',
-            expiryDate: expiryDate,
-            pickupTime: pickupTime,
-            description: req.body.description || '',
-            status: 'pending',
-            location: req.body.location || {}
+            status: 'pending'
         });
 
         const savedDonation = await donation.save();

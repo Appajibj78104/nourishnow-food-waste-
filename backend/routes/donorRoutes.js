@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/authMiddleware');
+const { protect, donor } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 const {
     getDonorProfile,
     updateProfile,
     getDonorStats,
-    getDonorLeaderboard
+    getLeaderboard,
+    getBroadcasts,
+    createBroadcast
 } = require('../controllers/donorController');
 
 // Protect all routes
@@ -21,6 +23,10 @@ router.route('/profile')
 router.get('/stats', getDonorStats);
 
 // Leaderboard route
-router.get('/leaderboard', getDonorLeaderboard);
+router.get('/leaderboard', getLeaderboard);
+
+// Broadcast routes
+router.get('/broadcasts', protect, donor, getBroadcasts);
+router.post('/broadcasts', protect, donor, createBroadcast);
 
 module.exports = router; 

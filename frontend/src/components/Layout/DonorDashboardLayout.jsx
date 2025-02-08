@@ -7,7 +7,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
 import { 
     FaHome, FaHandHoldingHeart, FaHistory, 
-    FaCog, FaComments, FaBell 
+    FaCog, FaComments, FaBell, FaBullhorn 
 } from 'react-icons/fa';
 
 <<<<<<< HEAD
@@ -23,7 +23,8 @@ const DonorDashboardLayout = () => {
         { path: '/donor/create', icon: FaHandHoldingHeart, label: 'Create Donation' },
         { path: '/donor/history', icon: FaHistory, label: 'History' },
         { path: '/donor/chat', icon: FaComments, label: 'Chat' },
-        { path: '/donor/settings', icon: FaCog, label: 'Settings' }
+        { path: '/donor/settings', icon: FaCog, label: 'Settings' },
+        { path: '/donor/broadcasts', icon: FaBullhorn, label: 'Broadcasts' }
     ];
 
     return (

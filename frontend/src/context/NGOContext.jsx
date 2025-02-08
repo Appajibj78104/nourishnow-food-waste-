@@ -1,34 +1,46 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import axios from 'axios';
-import { useAuth } from './AuthContext';
+import { getDashboardStats } from '../services/ngoService';
 
 const NGOContext = createContext();
 
 export const NGOProvider = ({ children }) => {
-    const { user } = useAuth();
-    const [dashboardData, setDashboardData] = useState(null);
+    const [user, setUser] = useState(null);
+    const [stats, setStats] = useState(null);
+    const [loading, setLoading] = useState(false);
+
+    const updateUser = useCallback((userData) => {
+        setUser(userData);
+    }, []);
 
     const updateDashboardData = useCallback(async () => {
         try {
-            const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/ngo/dashboard`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                }
-            );
-            setDashboardData(response.data);
+            setLoading(true);
+            const data = await getDashboardStats();
+            setStats(data);
         } catch (error) {
-            console.error('Error fetching dashboard data:', error);
+            console.error('Error updating dashboard data:', error);
+        } finally {
+            setLoading(false);
         }
     }, []);
 
     return (
-        <NGOContext.Provider value={{ user, dashboardData, updateDashboardData }}>
+        <NGOContext.Provider value={{
+            user,
+            stats,
+            loading,
+            updateUser,
+            updateDashboardData
+        }}>
             {children}
         </NGOContext.Provider>
     );
 };
 
-export const useNGO = () => useContext(NGOContext); 
+export const useNGO = () => {
+    const context = useContext(NGOContext);
+    if (!context) {
+        throw new Error('useNGO must be used within an NGOProvider');
+    }
+    return context;
+}; 

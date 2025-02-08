@@ -32,7 +32,12 @@ const getAuthHeaders = () => {
 // Get donor's donations
 export const getDonations = async () => {
     try {
-        const response = await axios.get('/api/donations', getAuthHeaders());
+        const token = localStorage.getItem('token');
+        const response = await axios.get('/api/donations', {
+            headers: { 
+                Authorization: `Bearer ${token}` 
+            }
+        });
         return response.data;
     } catch (error) {
         console.error('Error fetching donations:', error);
@@ -51,13 +56,11 @@ export const getDonorStats = async () => {
             throw new Error('No authentication token found');
         }
 
-        const config = {
+        const response = await axios.get('/api/donations/stats', {
             headers: {
-                'Authorization': token
+                Authorization: `Bearer ${token}`
             }
-        };
-
-        const response = await axios.get('/api/donations/stats', config);
+        });
         return response.data;
     } catch (error) {
         console.error('Error fetching stats:', error);
@@ -113,27 +116,34 @@ export const createDonation = async (donationData) => {
             throw new Error('No authentication token found');
         }
 
-        const config = {
-            headers: {
-                'Authorization': token,
-                'Content-Type': 'application/json'
-            }
+        // Format dates to ISO string
+        const formattedData = {
+            ...donationData,
+            expiryDate: new Date(donationData.expiryDate).toISOString(),
+            pickupTime: new Date(donationData.pickupTime).toISOString(),
         };
 
-        console.log('Making donation request with:', {
-            data: donationData,
-            config
+        console.log('Making donation request with:', formattedData);
+
+        const response = await axios.post('/api/donations', formattedData, {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+            }
         });
 
-        const response = await axios.post('/api/donations', donationData, config);
         return response.data;
     } catch (error) {
+<<<<<<< HEAD
         console.error('Donation creation error:', {
             message: error.message,
             response: error.response?.data,
             status: error.response?.status
         });
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
+=======
+        console.error('Donation creation error:', error.response?.data || error);
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
         throw error;
     }
 };
@@ -248,25 +258,82 @@ export const editDonation = async (id, donationData) => {
     }
 };
 
-// Delete donation
-export const deleteDonation = async (id) => {
+// Get donation by ID
+export const getDonationById = async (id) => {
     try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-
-        const config = {
+        const response = await axios.get(`${API_URL}/donations/${id}`, {
             headers: {
-                'Authorization': token
+                Authorization: `Bearer ${localStorage.getItem('token')}`
             }
-        };
-
-        const response = await axios.delete(`/api/donations/${id}`, config);
+        });
         return response.data;
     } catch (error) {
+<<<<<<< HEAD
         console.error('Error deleting donation:', error);
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
         throw error;
+=======
+        throw error.response?.data || error.message;
+    }
+};
+
+// Update donation
+export const updateDonation = async (donationId, donationData) => {
+    try {
+        const response = await axios.put(`${API_URL}/donations/${donationId}`, donationData, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+};
+
+// Delete donation
+export const deleteDonation = async (donationId) => {
+    try {
+        const response = await axios.delete(`${API_URL}/donations/${donationId}`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+};
+
+// Get broadcasts
+export const getBroadcasts = async () => {
+    try {
+        const response = await axios.get('/api/donor/broadcasts', {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { message: 'Failed to fetch broadcasts' };
+    }
+};
+
+// Create broadcast
+export const createBroadcast = async (broadcastData) => {
+    try {
+        const response = await axios.post(
+            '/api/donor/broadcasts',
+            broadcastData,
+            {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            }
+        );
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { message: 'Failed to create broadcast' };
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
     }
 };

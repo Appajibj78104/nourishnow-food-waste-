@@ -1,65 +1,52 @@
 const express = require('express');
-const { protect, restrictTo } = require('../middleware/authMiddleware');
-const { 
-    getDashboardStats,
-    getRecentActivity,
-    getUsers,
-    getUserDetails,
-    updateUserStatus,
-    getNGOVerificationRequests,
-    verifyNGO,
-    getDonationStats,
-    getActiveDonations,
-    getCompletedDonations,
-    getDonationDetails,
-    getAnalytics,
-    updateSystemSettings,
-    getFeedback,
-    getFeedbackDetails,
-    getContent,
-    updateContent,
-    createContent,
-    addContent
-} = require('../controllers/adminController');
-
 const router = express.Router();
+const { protect, admin } = require('../middleware/authMiddleware');
+const adminController = require('../controllers/adminController');
+const { getAnalytics } = require('../controllers/analyticsController');
+const { getAdminAnalytics } = require('../controllers/adminController');
+const {
+    getInventory,
+    addInventoryItem,
+    updateInventoryItem,
+    deleteInventoryItem,
+    getInventoryStats,
+    getNGOs
+} = require('../controllers/adminInventoryController');
 
 // Protect all admin routes
 router.use(protect);
-router.use(restrictTo('admin'));
+router.use(admin);
 
-// Dashboard
-router.get('/dashboard/stats', getDashboardStats);
-router.get('/dashboard/recent-activity', getRecentActivity);
+// Get dashboard stats
+router.get('/dashboard/stats', adminController.getDashboardStats);
 
-// User Management
-router.get('/users', getUsers);
-router.get('/users/:id', getUserDetails);
-router.patch('/users/:id/status', updateUserStatus);
+// User Management Routes
+router.get('/users', adminController.getAllUsers);
+router.patch('/users/:userId/verify', adminController.verifyUser);
+router.patch('/users/:userId/status', adminController.updateUserStatus);
 
-// NGO Management
-router.get('/ngo/verification-requests', getNGOVerificationRequests);
-router.patch('/ngo/:id/verify', verifyNGO);
+// Donation Management Routes
+router.get('/donations', adminController.getAllDonations);
+router.get('/ngos/verified', adminController.getVerifiedNGOs);
+router.patch('/donations/:donationId/assign', adminController.assignDonation);
+router.patch('/donations/:donationId/status', adminController.updateDonationStatus);
 
-// Donation Management
-router.get('/donations/stats', getDonationStats);
-router.get('/donations/active', getActiveDonations);
-router.get('/donations/completed', getCompletedDonations);
-router.get('/donations/:id', getDonationDetails);
-
-// Analytics
+// Analytics Route
 router.get('/analytics', getAnalytics);
 
-// Settings
-router.patch('/settings', updateSystemSettings);
+// Broadcast Routes
+router.get('/broadcasts', adminController.getBroadcasts);
+router.post('/broadcasts', adminController.createBroadcast);
 
-// Feedback
-router.get('/feedback', getFeedback);
-router.get('/feedback/:id', getFeedbackDetails);
+// Admin Analytics Route
+router.get('/dashboard/analytics', getAdminAnalytics);
 
-// Content
-router.get('/content', getContent);
-router.post('/content', addContent);
-// router.patch('/content/:id', updateContent); // TODO: Add this route when we have a content management system    
+// Inventory routes
+router.get('/inventory', getInventory);
+router.post('/inventory', addInventoryItem);
+router.put('/inventory/:id', updateInventoryItem);
+router.delete('/inventory/:id', deleteInventoryItem);
+router.get('/inventory/stats', getInventoryStats);
+router.get('/inventory/ngos', getNGOs);
 
-module.exports = router; 
+module.exports = router;

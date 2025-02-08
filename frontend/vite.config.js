@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 <<<<<<< HEAD
 // https://vite.dev/config/
@@ -12,6 +13,7 @@ export default defineConfig({
 =======
 // https://vitejs.dev/config/
 export default defineConfig({
+<<<<<<< HEAD
   plugins: [
     react({
       jsxImportSource: '@emotion/react',
@@ -39,27 +41,35 @@ export default defineConfig({
 <<<<<<< HEAD
 =======
   },
+=======
+  plugins: [react()],
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
   server: {
-    port: 5173,
+    port: 5174,
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
-        secure: false,
-        ws: true,
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('Proxy error:', err);
-          });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request:', req.method, req.url);
-          });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response:', proxyRes.statusCode, req.url);
-          });
-        }
+        secure: false
+      },
+      '/socket.io': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        ws: true
       }
     }
+<<<<<<< HEAD
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
+=======
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src')
+    }
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: true
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
   }
 })

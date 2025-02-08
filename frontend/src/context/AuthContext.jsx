@@ -77,11 +77,20 @@ export function AuthProvider({ children }) {
         }
     };
 
-    const login = async (credentials) => {
+    const login = async (email, password) => {
         try {
-            const response = await axios.post('/api/auth/login', credentials);
+            const response = await axios.post('/api/auth/login', {
+                email,
+                password
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
             const { token, user } = response.data;
             
+            // Add Bearer prefix to token
             const tokenWithBearer = `Bearer ${token}`;
             localStorage.setItem('token', tokenWithBearer);
             localStorage.setItem('user', JSON.stringify(user));
@@ -91,15 +100,9 @@ export function AuthProvider({ children }) {
             
             setUser(user);
             setIsAuthenticated(true);
-            
             return response.data;
         } catch (error) {
             console.error('Login error:', error);
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            delete axios.defaults.headers.common['Authorization'];
-            setUser(null);
-            setIsAuthenticated(false);
             throw error;
         }
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
@@ -128,8 +131,11 @@ export function AuthProvider({ children }) {
                 return;
             }
 
+            // Ensure token has Bearer prefix
+            const tokenWithBearer = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+            
             // Set token in axios headers
-            axios.defaults.headers.common['Authorization'] = token;
+            axios.defaults.headers.common['Authorization'] = tokenWithBearer;
 
             // Set initial state from localStorage
             setUser(JSON.parse(storedUser));

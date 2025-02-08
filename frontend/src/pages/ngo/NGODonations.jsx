@@ -1,81 +1,124 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { motion } from 'framer-motion';
+import { FaFilter, FaSearch } from 'react-icons/fa';
+import { getDonations } from './services/ngoService';
+import { ErrorBoundary } from 'react-error-boundary';
+import { toast } from 'react-toastify';
+import DonationsList from './components/DonationsList';
+
+const ErrorFallback = ({ error, resetErrorBoundary }) => (
+    <div className="text-center p-6 bg-red-50 rounded-lg">
+        <h2 className="text-red-600 text-xl font-bold mb-4">Something went wrong:</h2>
+        <pre className="text-red-500 mb-4">{error.message}</pre>
+        <button
+            onClick={resetErrorBoundary}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+            Try again
+        </button>
+    </div>
+);
 
 const NGODonations = () => {
     const [donations, setDonations] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [activeTab, setActiveTab] = useState('pending');
+
+    const fetchDonations = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await getDonations();
+            
+            if (!response.success) {
+                throw new Error(response.message || 'Failed to fetch donations');
+            }
+            
+            setDonations(response.data || []);
+        } catch (err) {
+            console.error('Error fetching donations:', err);
+            setError(err.message || 'Failed to fetch donations');
+            toast.error('Failed to fetch donations');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         fetchDonations();
     }, []);
 
-    const fetchDonations = async () => {
-        try {
-            const response = await axios.get(
-                `${import.meta.env.VITE_API_URL}/ngo/donations`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                }
-            );
-            setDonations(response.data);
-            setLoading(false);
-        } catch (error) {
-            console.error('Error fetching donations:', error);
-            setLoading(false);
+    const filteredDonations = donations.filter(donation => {
+        switch (activeTab) {
+            case 'pending':
+                return donation.status === 'pending';
+            case 'active':
+                return ['accepted', 'picked_up'].includes(donation.status);
+            case 'completed':
+                return donation.status === 'completed';
+            default:
+                return true;
         }
-    };
+    });
 
-    const handleStatusUpdate = async (donationId, status) => {
-        try {
-            await axios.patch(
-                `${import.meta.env.VITE_API_URL}/donations/${donationId}/status`,
-                { status },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                }
-            );
-            fetchDonations();
-        } catch (error) {
-            console.error('Error updating donation status:', error);
-        }
-    };
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+            </div>
+        );
+    }
 
-    if (loading) return <div>Loading...</div>;
+    if (error) {
+        return <div className="text-red-500 text-center p-4">Error: {error}</div>;
+    }
 
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Donations</h1>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {donations.map(donation => (
-                    <div key={donation._id} className="bg-white p-4 rounded shadow">
-                        <h2 className="font-bold">{donation.foodType}</h2>
-                        <p>Quantity: {donation.quantity} {donation.quantityUnit}</p>
-                        <p>Status: {donation.status}</p>
-                        {donation.status === 'pending' && (
-                            <button
-                                onClick={() => handleStatusUpdate(donation._id, 'accepted')}
-                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-2"
-                            >
-                                Accept
-                            </button>
-                        )}
-                        {donation.status === 'accepted' && (
-                            <button
-                                onClick={() => handleStatusUpdate(donation._id, 'completed')}
-                                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mt-2"
-                            >
-                                Complete
-                            </button>
-                        )}
-                    </div>
-                ))}
+        <ErrorBoundary FallbackComponent={ErrorFallback} onReset={fetchDonations}>
+            <div className="p-6">
+                <h1 className="text-2xl font-bold text-white mb-6">Donations Management</h1>
+                
+                <div className="flex space-x-4 mb-6">
+                    <button
+                        onClick={() => setActiveTab('pending')}
+                        className={`px-4 py-2 rounded-lg ${
+                            activeTab === 'pending'
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-gray-700 text-gray-300'
+                        }`}
+                    >
+                        Pending
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('active')}
+                        className={`px-4 py-2 rounded-lg ${
+                            activeTab === 'active'
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-gray-700 text-gray-300'
+                        }`}
+                    >
+                        Active
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('completed')}
+                        className={`px-4 py-2 rounded-lg ${
+                            activeTab === 'completed'
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-gray-700 text-gray-300'
+                        }`}
+                    >
+                        Completed
+                    </button>
+                </div>
+
+                <DonationsList
+                    donations={filteredDonations}
+                    onStatusUpdate={fetchDonations}
+                />
             </div>
-        </div>
+        </ErrorBoundary>
     );
 };
 
-export default NGODonations; 
+export default NGODonations;

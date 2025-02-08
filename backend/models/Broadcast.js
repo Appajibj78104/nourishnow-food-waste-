@@ -1,11 +1,6 @@
 const mongoose = require('mongoose');
 
 const broadcastSchema = new mongoose.Schema({
-    ngo: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'NGO',
-        required: true
-    },
     title: {
         type: String,
         required: true
@@ -14,22 +9,25 @@ const broadcastSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    sender: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    recipients: {
+        type: String,
+        enum: ['all', 'donors', 'admin', 'ngos'],
+        default: 'all'
+    },
     urgency: {
         type: String,
-        enum: ['low', 'medium', 'high'],
-        default: 'medium'
+        enum: ['normal', 'urgent'],
+        default: 'normal'
     },
-    status: {
-        type: String,
-        enum: ['active', 'expired'],
-        default: 'active'
-    },
-    expiresAt: {
+    createdAt: {
         type: Date,
-        required: true
+        default: Date.now
     }
-}, {
-    timestamps: true
 });
 
-module.exports = mongoose.model('Broadcast', broadcastSchema); 
+module.exports = mongoose.model('Broadcast', broadcastSchema);

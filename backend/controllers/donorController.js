@@ -1,5 +1,7 @@
 const User = require('../models/User');
 const Donation = require('../models/Donation');
+const Broadcast = require('../models/Broadcast');
+const NGO = require('../models/NGO');
 
 // Get donor profile
 const getDonorProfile = async (req, res) => {
@@ -220,9 +222,176 @@ const getDonorLeaderboard = async (req, res) => {
     }
 };
 
+const getLeaderboard = async (req, res) => {
+    try {
+        const { timeframe = 'month' } = req.query;
+        let dateFilter = {};
+
+        // Calculate date range based on timeframe
+        const now = new Date();
+        if (timeframe === 'week') {
+            dateFilter = { createdAt: { $gte: new Date(now - 7 * 24 * 60 * 60 * 1000) } };
+        } else if (timeframe === 'month') {
+            dateFilter = { createdAt: { $gte: new Date(now.getFullYear(), now.getMonth(), 1) } };
+        } else if (timeframe === 'year') {
+            dateFilter = { createdAt: { $gte: new Date(now.getFullYear(), 0, 1) } };
+        }
+
+        const leaderboard = await Donation.aggregate([
+            { $match: { ...dateFilter, status: 'completed' } },
+            {
+                $group: {
+                    _id: '$donor',
+                    donations: { $sum: 1 },
+                    totalQuantity: { $sum: '$quantity' },
+                    points: { 
+                        $sum: {
+                            $cond: [
+                                { $eq: ['$status', 'completed'] },
+                                { $multiply: ['$quantity', 10] }, // 10 points per quantity
+                                0
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'donor'
+                }
+            },
+            { $unwind: '$donor' },
+            {
+                $project: {
+                    _id: 1,
+                    name: '$donor.name',
+                    donations: 1,
+                    points: 1,
+                    profilePicture: '$donor.profilePicture'
+                }
+            },
+            { $sort: { points: -1 } },
+            { $limit: 10 }
+        ]);
+
+        res.json(leaderboard);
+    } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching leaderboard',
+            error: error.message
+        });
+    }
+};
+
+const getBroadcasts = async (req, res) => {
+    try {
+        console.log('Fetching broadcasts for donor:', req.user._id);
+        const broadcasts = await Broadcast.find({
+            $or: [
+                { sender: req.user._id },
+                { recipients: { $in: ['all', 'donors'] } }
+            ]
+        })
+        .sort({ createdAt: -1 })
+        .populate('sender', 'name role');
+
+        console.log('Found broadcasts:', broadcasts.length);
+        res.json({
+            success: true,
+            data: broadcasts
+        });
+    } catch (error) {
+        console.error('Error fetching broadcasts:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching broadcasts'
+        });
+    }
+};
+
+const createBroadcast = async (req, res) => {
+    try {
+        const { title, message, recipients } = req.body;
+
+        // Validate recipients
+        if (!['all', 'ngos', 'admin'].includes(recipients)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid recipient type'
+            });
+        }
+
+        const broadcast = await Broadcast.create({
+            title,
+            message,
+            recipients,
+            sender: req.user._id,
+            urgency: 'normal'
+        });
+
+        // Get the io instance
+        const io = req.app.get('io');
+
+        // Emit to appropriate rooms based on recipients
+        if (recipients === 'all') {
+            io.to('admin-broadcasts').to('ngo-broadcasts').emit('newBroadcast', {
+                broadcast: {
+                    ...broadcast.toObject(),
+                    sender: {
+                        _id: req.user._id,
+                        name: req.user.name,
+                        role: 'donor'
+                    }
+                }
+            });
+        } else if (recipients === 'ngos') {
+            io.to('ngo-broadcasts').emit('newBroadcast', {
+                broadcast: {
+                    ...broadcast.toObject(),
+                    sender: {
+                        _id: req.user._id,
+                        name: req.user.name,
+                        role: 'donor'
+                    }
+                }
+            });
+        } else if (recipients === 'admin') {
+            io.to('admin-broadcasts').emit('newBroadcast', {
+                broadcast: {
+                    ...broadcast.toObject(),
+                    sender: {
+                        _id: req.user._id,
+                        name: req.user.name,
+                        role: 'donor'
+                    }
+                }
+            });
+        }
+
+        res.status(201).json({
+            success: true,
+            data: broadcast
+        });
+    } catch (error) {
+        console.error('Error creating broadcast:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error creating broadcast'
+        });
+    }
+};
+
 module.exports = {
     getDonorProfile,
     updateProfile,
     getDonorStats,
-    getDonorLeaderboard
+    getDonorLeaderboard,
+    getLeaderboard,
+    getBroadcasts,
+    createBroadcast
 }; 

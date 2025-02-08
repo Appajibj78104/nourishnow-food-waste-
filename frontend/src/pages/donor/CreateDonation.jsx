@@ -73,38 +73,48 @@ const CreateDonation = () => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
-        foodType: '',
+        foodType: 'cooked',
         quantity: '',
+        unit: 'servings',
         expiryDate: '',
         pickupTime: '',
-        description: ''
+        description: '',
+        pickupAddress: {
+            street: '',
+            district: '',
+            state: '',
+            pincode: ''
+        }
     });
 
     const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+        const { name, value } = e.target;
+        if (name.startsWith('pickupAddress.')) {
+            const field = name.split('.')[1];
+            setFormData(prev => ({
+                ...prev,
+                pickupAddress: {
+                    ...prev.pickupAddress,
+                    [field]: value
+                }
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-
         try {
-            // Validate form data
-            if (!formData.foodType || !formData.quantity || !formData.expiryDate || !formData.pickupTime) {
-                throw new Error('Please fill in all required fields');
-            }
-
-            console.log('Submitting donation with data:', formData);
-            const response = await createDonation(formData);
-            
+            await createDonation(formData);
             toast.success('Donation created successfully!');
             navigate('/donor/dashboard');
         } catch (error) {
-            console.error('Error creating donation:', error);
-            toast.error(error.response?.data?.message || error.message || 'Failed to create donation');
+            toast.error(error.response?.data?.message || 'Error creating donation');
         } finally {
             setIsLoading(false);
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
@@ -181,74 +191,159 @@ const CreateDonation = () => {
                         className="w-full p-2 border rounded"
 =======
         <div className="max-w-2xl mx-auto p-6">
-            <h2 className="text-2xl font-bold mb-6">Create New Donation</h2>
+            <h1 className="text-2xl font-bold text-white mb-6">Create New Donation</h1>
+            
             <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Food Type */}
                 <div>
-                    <label className="block mb-2">Food Type</label>
+                    <label className="text-white">Food Type</label>
                     <select
                         name="foodType"
                         value={formData.foodType}
                         onChange={handleChange}
-                        className="w-full p-2 border rounded"
-                        required
+                        className="w-full p-3 bg-gray-700 rounded text-white border border-gray-600"
                     >
-                        <option value="">Select Food Type</option>
                         <option value="cooked">Cooked Food</option>
                         <option value="packaged">Packaged Food</option>
-                        <option value="raw">Raw Ingredients</option>
+                        <option value="raw">Raw Food</option>
                         <option value="other">Other</option>
                     </select>
                 </div>
 
+                {/* Quantity */}
                 <div>
-                    <label className="block mb-2">Quantity (servings)</label>
+                    <label className="text-white">Quantity (servings)</label>
                     <input
                         type="number"
                         name="quantity"
                         value={formData.quantity}
                         onChange={handleChange}
-                        className="w-full p-2 border rounded"
+                        className="w-full p-3 bg-gray-700 rounded text-white border border-gray-600"
                         required
-                        min="1"
                     />
                 </div>
 
+                {/* Unit */}
                 <div>
-                    <label className="block mb-2">Expiry Date</label>
+                    <label className="text-white">Unit</label>
+                    <select
+                        name="unit"
+                        value={formData.unit}
+                        onChange={handleChange}
+                        className="w-full p-3 bg-gray-700 rounded text-white border border-gray-600"
+                        required
+                    >
+                        <option value="servings">Servings</option>
+                        <option value="kgs">Kilograms</option>
+                        <option value="items">Items</option>
+                        <option value="packages">Packages</option>
+                        <option value="meals">Meals</option>
+                    </select>
+                </div>
+
+                {/* Expiry Date */}
+                <div>
+                    <label className="text-white">Expiry Date</label>
                     <input
                         type="datetime-local"
                         name="expiryDate"
                         value={formData.expiryDate}
                         onChange={handleChange}
-                        className="w-full p-2 border rounded"
+                        className="w-full p-3 bg-gray-700 rounded text-white border border-gray-600"
                         required
                     />
                 </div>
 
+                {/* Pickup Time */}
                 <div>
-                    <label className="block mb-2">Pickup Time</label>
+                    <label className="text-white">Pickup Time</label>
                     <input
                         type="datetime-local"
                         name="pickupTime"
                         value={formData.pickupTime}
                         onChange={handleChange}
-                        className="w-full p-2 border rounded"
+                        className="w-full p-3 bg-gray-700 rounded text-white border border-gray-600"
                         required
                     />
                 </div>
 
+                {/* Address Fields */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-white">Pickup Address</h3>
+                    
+                    <div>
+                        <label className="text-white">Street Address</label>
+                        <input
+                            type="text"
+                            name="pickupAddress.street"
+                            value={formData.pickupAddress.street}
+                            onChange={handleChange}
+                            className="w-full p-3 bg-gray-700 rounded text-white border border-gray-600"
+                            required
+                            placeholder="Enter street address"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="text-white">District</label>
+                        <input
+                            type="text"
+                            name="pickupAddress.district"
+                            value={formData.pickupAddress.district}
+                            onChange={handleChange}
+                            className="w-full p-3 bg-gray-700 rounded text-white border border-gray-600"
+                            required
+                            placeholder="Enter district"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="text-white">State</label>
+                        <input
+                            type="text"
+                            name="pickupAddress.state"
+                            value={formData.pickupAddress.state}
+                            onChange={handleChange}
+                            className="w-full p-3 bg-gray-700 rounded text-white border border-gray-600"
+                            required
+                            placeholder="Enter state"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="text-white">Pincode</label>
+                        <input
+                            type="text"
+                            name="pickupAddress.pincode"
+                            value={formData.pickupAddress.pincode}
+                            onChange={handleChange}
+                            pattern="\d{6}"
+                            maxLength="6"
+                            className="w-full p-3 bg-gray-700 rounded text-white border border-gray-600"
+                            required
+                            placeholder="Enter 6-digit pincode"
+                        />
+                    </div>
+                </div>
+
+                {/* Description */}
                 <div>
-                    <label className="block mb-2">Description</label>
+                    <label className="text-white">Description</label>
                     <textarea
                         name="description"
                         value={formData.description}
                         onChange={handleChange}
-                        className="w-full p-2 border rounded"
+                        className="w-full p-3 bg-gray-700 rounded text-white border border-gray-600"
                         rows="4"
+<<<<<<< HEAD
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
+=======
+                        placeholder="Add any additional details about the donation"
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
                     />
                 </div>
 
+                {/* Submit Button */}
                 <button
                     type="submit"
 <<<<<<< HEAD

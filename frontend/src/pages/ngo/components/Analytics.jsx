@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { Line, Bar } from 'react-chartjs-2';
+import { FaChartLine, FaUsers, FaHandHoldingHeart } from 'react-icons/fa';
+import { getAnalytics } from '../../../services/ngoService';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -8,11 +10,9 @@ import {
     PointElement,
     LineElement,
     BarElement,
-    ArcElement,
     Title,
     Tooltip,
-    Legend,
-    Filler
+    Legend
 } from 'chart.js';
 
 ChartJS.register(
@@ -21,151 +21,176 @@ ChartJS.register(
     PointElement,
     LineElement,
     BarElement,
-    ArcElement,
     Title,
     Tooltip,
-    Legend,
-    Filler
+    Legend
 );
 
 const Analytics = () => {
-    // Mock data
-    const monthlyData = {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-        datasets: [
-            {
-                label: 'Food Collected (kg)',
-                data: [300, 450, 380, 500, 420, 550],
-                borderColor: 'rgb(59, 130, 246)',
-                backgroundColor: 'rgba(59, 130, 246, 0.5)',
-                tension: 0.4,
-                fill: true
-            }
-        ]
-    };
+    const [analyticsData, setAnalyticsData] = useState(null);
+    const [timeframe, setTimeframe] = useState('week');
+    const [loading, setLoading] = useState(true);
 
-    const foodTypeData = {
-        labels: ['Rice', 'Vegetables', 'Fruits', 'Cooked Food', 'Others'],
-        datasets: [
-            {
-                data: [30, 25, 15, 20, 10],
-                backgroundColor: [
-                    'rgba(59, 130, 246, 0.8)',
-                    'rgba(16, 185, 129, 0.8)',
-                    'rgba(245, 158, 11, 0.8)',
-                    'rgba(239, 68, 68, 0.8)',
-                    'rgba(107, 114, 128, 0.8)'
-                ]
-            }
-        ]
-    };
+    useEffect(() => {
+        fetchAnalytics();
+    }, [timeframe]);
 
-    const impactData = {
-        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-        datasets: [
-            {
-                label: 'People Fed',
-                data: [1200, 1400, 1100, 1600],
-                backgroundColor: 'rgba(16, 185, 129, 0.8)'
-            }
-        ]
-    };
-
-    const chartOptions = {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'top',
-                labels: { color: 'white' }
-            },
-            title: {
-                display: true,
-                color: 'white'
-            }
-        },
-        scales: {
-            y: {
-                grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                ticks: { color: 'white' }
-            },
-            x: {
-                grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                ticks: { color: 'white' }
-            }
+    const fetchAnalytics = async () => {
+        try {
+            setLoading(true);
+            const data = await getAnalytics(timeframe);
+            setAnalyticsData(data);
+        } catch (error) {
+            console.error('Error fetching analytics:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const pieOptions = {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'right',
-                labels: { color: 'white' }
+    const lineChartData = {
+        labels: analyticsData?.timeline?.map(item => item.date) || [],
+        datasets: [
+            {
+                label: 'Donations Received',
+                data: analyticsData?.timeline?.map(item => item.donations) || [],
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.4
             }
-        }
+        ]
+    };
+
+    const barChartData = {
+        labels: ['Food Types'],
+        datasets: [
+            {
+                label: 'Cooked',
+                data: [analyticsData?.foodTypes?.cooked || 0],
+                backgroundColor: 'rgba(255, 99, 132, 0.5)'
+            },
+            {
+                label: 'Packaged',
+                data: [analyticsData?.foodTypes?.packaged || 0],
+                backgroundColor: 'rgba(54, 162, 235, 0.5)'
+            },
+            {
+                label: 'Raw',
+                data: [analyticsData?.foodTypes?.raw || 0],
+                backgroundColor: 'rgba(75, 192, 192, 0.5)'
+            }
+        ]
     };
 
     return (
         <div className="space-y-6">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-                Analytics Dashboard
-            </h2>
+            {/* Header */}
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-white">Analytics Dashboard</h2>
+                <select
+                    value={timeframe}
+                    onChange={(e) => setTimeframe(e.target.value)}
+                    className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
+                >
+                    <option value="week">Last Week</option>
+                    <option value="month">Last Month</option>
+                    <option value="year">Last Year</option>
+                </select>
+            </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {[
-                    { label: 'Total Collections', value: '2,500 kg' },
-                    { label: 'People Fed', value: '5,300+' },
-                    { label: 'Active Donors', value: '45' },
-                    { label: 'Success Rate', value: '98%' }
-                ].map((stat, index) => (
-                    <motion.div
-                        key={stat.label}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="backdrop-blur-lg bg-white/5 rounded-xl p-4 border border-white/10"
-                    >
-                        <p className="text-gray-400 text-sm">{stat.label}</p>
-                        <p className="text-2xl font-bold text-white">{stat.value}</p>
-                    </motion.div>
-                ))}
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatsCard
+                    title="Total Donations"
+                    value={analyticsData?.totalDonations || 0}
+                    icon={FaHandHoldingHeart}
+                    change={analyticsData?.donationGrowth || 0}
+                />
+                <StatsCard
+                    title="People Served"
+                    value={analyticsData?.peopleServed || 0}
+                    icon={FaUsers}
+                    change={analyticsData?.peopleServedGrowth || 0}
+                />
+                <StatsCard
+                    title="Active Donors"
+                    value={analyticsData?.activeDonors || 0}
+                    icon={FaChartLine}
+                    change={analyticsData?.donorGrowth || 0}
+                />
             </div>
 
             {/* Charts */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Monthly Collections */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="backdrop-blur-lg bg-white/5 rounded-xl p-6 border border-white/10"
+                    className="backdrop-blur-lg bg-white/5 rounded-2xl p-6 border border-white/10"
                 >
-                    <h3 className="text-lg font-semibold text-white mb-4">Monthly Collections</h3>
-                    <Line data={monthlyData} options={chartOptions} />
+                    <h3 className="text-lg font-semibold text-white mb-4">Donation Trends</h3>
+                    <Line data={lineChartData} options={chartOptions} />
                 </motion.div>
 
-                {/* Food Type Distribution */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="backdrop-blur-lg bg-white/5 rounded-xl p-6 border border-white/10"
+                    className="backdrop-blur-lg bg-white/5 rounded-2xl p-6 border border-white/10"
                 >
                     <h3 className="text-lg font-semibold text-white mb-4">Food Type Distribution</h3>
-                    <Doughnut data={foodTypeData} options={pieOptions} />
-                </motion.div>
-
-                {/* Weekly Impact */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="backdrop-blur-lg bg-white/5 rounded-xl p-6 border border-white/10 md:col-span-2"
-                >
-                    <h3 className="text-lg font-semibold text-white mb-4">Weekly Impact</h3>
-                    <Bar data={impactData} options={chartOptions} />
+                    <Bar data={barChartData} options={chartOptions} />
                 </motion.div>
             </div>
         </div>
     );
 };
 
-export default Analytics; 
+const StatsCard = ({ title, value, icon: Icon, change }) => (
+    <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="backdrop-blur-lg bg-white/5 rounded-2xl p-6 border border-white/10"
+    >
+        <div className="flex items-center justify-between">
+            <div>
+                <p className="text-gray-400 text-sm">{title}</p>
+                <p className="text-2xl font-bold text-white mt-1">{value}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-white/5">
+                <Icon className="text-2xl text-blue-400" />
+            </div>
+        </div>
+        <div className={`mt-2 text-sm ${change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+            {change >= 0 ? '+' : ''}{change}% from last period
+        </div>
+    </motion.div>
+);
+
+const chartOptions = {
+    responsive: true,
+    plugins: {
+        legend: {
+            position: 'top',
+            labels: {
+                color: 'white'
+            }
+        }
+    },
+    scales: {
+        x: {
+            grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+            },
+            ticks: {
+                color: 'white'
+            }
+        },
+        y: {
+            grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+            },
+            ticks: {
+                color: 'white'
+            }
+        }
+    }
+};
+
+export default Analytics;

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import axios from 'axios';
+import { register } from '../services/authService';
+import { toast } from 'react-toastify';
 
 const RegisterForm = () => {
     const navigate = useNavigate();
@@ -12,7 +13,7 @@ const RegisterForm = () => {
         email: '',
         password: '',
         confirmPassword: '',
-        role: 'donor'
+        role: 'ngo'
     });
 
     const handleChange = (e) => {
@@ -28,7 +29,6 @@ const RegisterForm = () => {
         setError('');
         setIsLoading(true);
 
-        // Validate passwords match
         if (formData.password !== formData.confirmPassword) {
             setError('Passwords do not match');
             setIsLoading(false);
@@ -36,23 +36,20 @@ const RegisterForm = () => {
         }
 
         try {
-            // Remove confirmPassword before sending to backend
             const { confirmPassword, ...registrationData } = formData;
+            const response = await register(registrationData);
             
-            console.log('Sending registration data:', registrationData);
-            
-            const response = await axios.post('http://localhost:5000/api/auth/register', registrationData);
-            
-            console.log('Registration response:', response.data);
-
-            if (response.data) {
-                // Show success message
-                alert('Registration successful! Please login.');
-                navigate('/login');
+            if (response.success) {
+                toast.success('NGO Registration successful!');
+                navigate('/ngo/dashboard');
+            } else {
+                throw new Error(response.message || 'Registration failed');
             }
-        } catch (err) {
-            console.error('Registration error:', err);
-            setError(err.response?.data?.message || 'Registration failed. Please try again.');
+        } catch (error) {
+            console.error('Registration error:', error);
+            const errorMessage = error.message || 'Registration failed';
+            setError(errorMessage);
+            toast.error(errorMessage);
         } finally {
             setIsLoading(false);
         }

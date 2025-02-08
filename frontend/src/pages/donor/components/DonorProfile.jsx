@@ -242,7 +242,7 @@ const DonorProfile = () => {
             }));
             
             toast.success('Profile updated successfully');
-            setIsEditing(false);
+        setIsEditing(false);
         } catch (error) {
             console.error('Error updating profile:', error);
             toast.error(error.message || 'Failed to update profile');
@@ -281,18 +281,18 @@ const DonorProfile = () => {
                     <p className="text-gray-400">{user?.email}</p>
                 </div>
             </div>
-            <button
+                <button
                 onClick={handleLogout}
                 className="flex items-center px-4 py-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
-            >
+                >
                 <FaSignOutAlt className="mr-2" />
                 Logout
-            </button>
-        </div>
+                </button>
+            </div>
     );
 
     return (
-        <motion.div
+                    <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="max-w-4xl mx-auto"
@@ -418,7 +418,7 @@ const DonorProfile = () => {
                                         <span className="text-white">{formData.organization.name || 'Not provided'}</span>
                                     )}
                                 </div>
-                            </div>
+                        </div>
 
                             <div>
                                 <label className="block text-gray-400 mb-2">Position</label>
@@ -443,12 +443,12 @@ const DonorProfile = () => {
 
                     {activeTab === 'social' && (
                         <div className="grid grid-cols-1 gap-6">
-                            <div>
+                                <div>
                                 <label className="block text-gray-400 mb-2">Facebook</label>
                                 <div className="flex items-center bg-gray-900/50 rounded-lg p-3 border border-gray-700">
                                     <FaFacebook className="text-gray-400 mr-3" />
                                     {isEditing ? (
-                                        <input
+                                    <input
                                             type="url"
                                             name="socialLinks.facebook"
                                             value={formData.socialLinks.facebook}
@@ -462,12 +462,12 @@ const DonorProfile = () => {
                                 </div>
                             </div>
 
-                            <div>
+                                <div>
                                 <label className="block text-gray-400 mb-2">Twitter</label>
                                 <div className="flex items-center bg-gray-900/50 rounded-lg p-3 border border-gray-700">
                                     <FaTwitter className="text-gray-400 mr-3" />
                                     {isEditing ? (
-                                        <input
+                                    <input
                                             type="url"
                                             name="socialLinks.twitter"
                                             value={formData.socialLinks.twitter}
@@ -481,12 +481,12 @@ const DonorProfile = () => {
                                 </div>
                             </div>
 
-                            <div>
+                                <div>
                                 <label className="block text-gray-400 mb-2">LinkedIn</label>
                                 <div className="flex items-center bg-gray-900/50 rounded-lg p-3 border border-gray-700">
                                     <FaLinkedin className="text-gray-400 mr-3" />
                                     {isEditing ? (
-                                        <input
+                                    <input
                                             type="url"
                                             name="socialLinks.linkedin"
                                             value={formData.socialLinks.linkedin}
@@ -504,7 +504,7 @@ const DonorProfile = () => {
 
                     {activeTab === 'preferences' && (
                         <div className="space-y-6">
-                            <div>
+                                <div>
                                 <h3 className="text-white font-semibold mb-4">Notification Settings</h3>
                                 <div className="space-y-3">
                                     {isEditing ? (
@@ -518,9 +518,9 @@ const DonorProfile = () => {
                                                     className="form-checkbox text-blue-500 rounded bg-gray-700 border-gray-600"
                                                 />
                                                 <span className="text-gray-300">Email Notifications</span>
-                                            </label>
+                                    </label>
                                             <label className="flex items-center space-x-3">
-                                                <input
+                                    <input
                                                     type="checkbox"
                                                     name="preferences.notifications.push"
                                                     checked={formData.preferences.notifications.push}
@@ -557,7 +557,7 @@ const DonorProfile = () => {
                                                     className="form-checkbox text-blue-500 rounded bg-gray-700 border-gray-600"
                                                 />
                                                 <span className="text-gray-300">Show Profile to Others</span>
-                                            </label>
+                                </label>
                                             <label className="flex items-center space-x-3">
                                                 <input
                                                     type="checkbox"
@@ -584,22 +584,22 @@ const DonorProfile = () => {
                         </div>
                     )}
 
-                    {isEditing && (
+                            {isEditing && (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className="flex justify-end"
                         >
-                            <button
-                                type="submit"
+                                    <button
+                                        type="submit"
                                 disabled={loading}
                                 className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors disabled:bg-gray-500"
-                            >
+                                    >
                                 {loading ? 'Saving...' : 'Save Changes'}
-                            </button>
+                                    </button>
                         </motion.div>
-                    )}
-                </form>
+                            )}
+                        </form>
             </div>
         </motion.div>
     );

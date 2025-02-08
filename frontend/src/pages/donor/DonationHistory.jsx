@@ -7,12 +7,18 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import DonationList from './components/DonationList';
+<<<<<<< HEAD
 import { getDonorDonations } from './services/donorService';
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
+=======
+import EditDonationModal from './components/EditDonationModal';
+import { getDonorDonations, deleteDonation } from './services/donorService';
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
 
 const DonationHistory = () => {
     const [donations, setDonations] = useState([]);
     const [loading, setLoading] = useState(true);
+<<<<<<< HEAD
 <<<<<<< HEAD
     const { user } = useAuth();
 
@@ -58,32 +64,46 @@ const DonationHistory = () => {
     useEffect(() => {
         fetchDonations();
     }, []);
+=======
+    const [editingDonation, setEditingDonation] = useState(null);
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
 
     const fetchDonations = async () => {
         try {
-            setLoading(true);
             const data = await getDonorDonations();
             setDonations(data);
         } catch (error) {
             console.error('Error fetching donations:', error);
-            toast.error('Failed to load donations');
+            toast.error('Failed to fetch donations');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleEdit = (id) => {
-        // Implement edit functionality
-        console.log('Edit donation:', id);
+    useEffect(() => {
+        fetchDonations();
+    }, []);
+
+    const handleEdit = (donationId) => {
+        const donation = donations.find(d => d._id === donationId);
+        setEditingDonation(donation);
     };
 
-    const handleDelete = (id) => {
-        // Implement delete functionality
-        console.log('Delete donation:', id);
+    const handleDelete = async (donationId) => {
+        if (window.confirm('Are you sure you want to delete this donation?')) {
+            try {
+                await deleteDonation(donationId);
+                toast.success('Donation deleted successfully');
+                fetchDonations();
+            } catch (error) {
+                console.error('Error deleting donation:', error);
+                toast.error('Failed to delete donation');
+            }
+        }
     };
 
     if (loading) {
-        return <div className="text-center py-4">Loading donations...</div>;
+        return <div>Loading...</div>;
     }
 
     return (
@@ -95,7 +115,18 @@ const DonationHistory = () => {
                 onEdit={handleEdit}
                 onDelete={handleDelete}
             />
+<<<<<<< HEAD
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
+=======
+
+            {editingDonation && (
+                <EditDonationModal
+                    donation={editingDonation}
+                    onClose={() => setEditingDonation(null)}
+                    onUpdate={fetchDonations}
+                />
+            )}
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
         </div>
     );
 };

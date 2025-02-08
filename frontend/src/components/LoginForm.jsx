@@ -16,8 +16,12 @@ const LoginForm = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { login } = useAuth();
+<<<<<<< HEAD
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
     const [isLoading, setIsLoading] = useState(false);
+=======
+    const [loading, setLoading] = useState(false);
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         email: '',
@@ -33,10 +37,8 @@ const LoginForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-        setIsLoading(true);
-
         try {
+<<<<<<< HEAD
             const response = await login(formData);
 <<<<<<< HEAD
             console.log('Login successful:', response);
@@ -77,37 +79,59 @@ const LoginForm = () => {
             );
 =======
             const { user } = response;
+=======
+            setLoading(true);
+            const { user } = await login(formData.email, formData.password);
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
             
-            // Log the user role and navigation
-            console.log('User role:', user.role);
-            
-            // Redirect based on user role
-            let redirectPath;
-            switch(user.role) {
+            // Redirect based on role
+            switch (user.role) {
                 case 'donor':
-                    redirectPath = '/donor/dashboard';
+                    navigate('/donor/dashboard');
                     break;
                 case 'ngo':
-                    redirectPath = '/ngo/dashboard';
+                    navigate('/ngo/dashboard');
                     break;
                 case 'admin':
-                    redirectPath = '/admin/dashboard';
+                    navigate('/admin/dashboard');
                     break;
                 default:
-                    redirectPath = '/';
+                    navigate('/');
             }
             
-            console.log('Redirecting to:', redirectPath);
             toast.success('Login successful!');
-            navigate(redirectPath, { replace: true });
-            
         } catch (error) {
             console.error('Login error:', error);
+<<<<<<< HEAD
             toast.error(error.message || 'Login failed');
             setError(error.message || 'Login failed');
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
+=======
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to login';
+            
+            if (errorMessage.includes('disabled') || errorMessage.includes('blocked')) {
+                toast.error('User blocked. Please contact support.', {
+                    position: "top-center",
+                    autoClose: false,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    theme: "colored",
+                    style: {
+                        backgroundColor: '#ef4444',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: '16px',
+                        padding: '16px'
+                    }
+                });
+            } else {
+                toast.error(errorMessage);
+            }
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
@@ -185,10 +209,10 @@ const LoginForm = () => {
 
                         <button
                             type="submit"
-                            disabled={isLoading}
+                            disabled={loading}
                             className="w-full flex justify-center py-3 px-4 rounded-full bg-gradient-to-r from-blue-500 to-teal-500 text-white text-sm font-semibold hover:from-blue-600 hover:to-teal-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-300"
                         >
-                            {isLoading ? (
+                            {loading ? (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}

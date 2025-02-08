@@ -25,9 +25,10 @@ export const registerNGO = async (formData) => {
     }
 };
 
-// Login
-export const login = async (credentials) => {
+// Register
+export const register = async (userData) => {
     try {
+<<<<<<< HEAD
 <<<<<<< HEAD
         const response = await axios.post(`${API_URL}/auth/login`, credentials);
 =======
@@ -57,6 +58,37 @@ export const login = async (credentials) => {
         });
         throw error.response?.data || { message: 'Login failed. Please try again.' };
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
+=======
+        const response = await axios.post('/api/auth/register', userData);
+        
+        if (response.data && response.data.success) {
+            // Store token and user data
+            localStorage.setItem('token', `Bearer ${response.data.token}`);
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+            return response.data;
+        } else {
+            throw new Error(response.data.message || 'Registration failed');
+        }
+    } catch (error) {
+        if (error.response && error.response.data) {
+            throw error.response.data;
+        }
+        throw { success: false, message: 'Registration failed' };
+    }
+};
+
+// Login
+export const login = async (email, password) => {
+    try {
+        const response = await axios.post('/api/auth/login', { email, password });
+        if (response.data.success) {
+            localStorage.setItem('token', `Bearer ${response.data.token}`);
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+        }
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { message: 'Login failed' };
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
     }
 };
 
@@ -64,6 +96,7 @@ export const login = async (credentials) => {
 export const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    window.location.href = '/login';
 };
 
 // Check Auth Status

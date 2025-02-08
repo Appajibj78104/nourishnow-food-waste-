@@ -43,50 +43,43 @@ const catchAsync = require('../utils/catchAsync');
 // Protect routes - Authentication
 const protect = async (req, res, next) => {
     try {
-        let token = req.headers.authorization;
+        let token;
+        
+        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+            token = req.headers.authorization.split(' ')[1];
+        }
 
-        if (!token || !token.startsWith('Bearer ')) {
-            console.log('No token or invalid token format:', token);
+        if (!token) {
             return res.status(401).json({
                 success: false,
-                message: 'No token provided'
+                message: 'Not authorized, no token'
             });
         }
 
-        // Remove Bearer from string
-        token = token.split(' ')[1];
-
-        try {
-            // Verify token
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            console.log('Token decoded successfully:', decoded);
-            
-            // Get user from token
-            const user = await User.findById(decoded.userId).select('-password');
-            
-            if (!user) {
-                console.log('User not found for token:', decoded.userId);
-                return res.status(401).json({
-                    success: false,
-                    message: 'User not found'
-                });
-            }
-
-            // Add user to request
-            req.user = user;
-            next();
-        } catch (err) {
-            console.error('Token verification error:', err);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = await User.findById(decoded.id).select('-password');
+        
+        if (!req.user) {
             return res.status(401).json({
                 success: false,
-                message: 'Invalid token'
+                message: 'Not authorized, user not found'
             });
         }
+
+        // Check if user is disabled (except for admin)
+        if (req.user.status === 'disabled' && req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Your account has been disabled. Please contact support.'
+            });
+        }
+
+        next();
     } catch (error) {
-        console.error('Auth middleware error:', error);
-        return res.status(500).json({
+        console.error('Auth error:', error);
+        res.status(401).json({
             success: false,
-            message: 'Server error'
+            message: 'Not authorized, token failed'
         });
     }
 };
@@ -106,5 +99,43 @@ const restrictTo = (...roles) => {
 module.exports = { protect, authorize };
 =======
 
+<<<<<<< HEAD
 module.exports = { protect, restrictTo };
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
+=======
+const admin = (req, res, next) => {
+    if (req.user && req.user.role === 'admin') {
+        next();
+    } else {
+        res.status(403).json({
+            success: false,
+            message: 'Not authorized as admin'
+        });
+    }
+};
+
+// Add this middleware for donor-specific routes
+const donor = (req, res, next) => {
+    if (req.user && req.user.role === 'donor') {
+        next();
+    } else {
+        res.status(403).json({
+            success: false,
+            message: 'Not authorized as donor'
+        });
+    }
+};
+
+const ngo = (req, res, next) => {
+    if (req.user && req.user.role === 'ngo') {
+        next();
+    } else {
+        res.status(403).json({
+            success: false,
+            message: 'Not authorized as NGO'
+        });
+    }
+};
+
+module.exports = { protect, restrictTo, admin, donor, ngo };
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)

@@ -1,39 +1,52 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { io } from 'socket.io-client';
+import io from 'socket.io-client';
 import { useAuth } from './AuthContext';
 
-export const SocketContext = createContext();
+const SocketContext = createContext(null);
+
+export const useSocket = () => useContext(SocketContext);
 
 export const SocketProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);
     const { user } = useAuth();
 
     useEffect(() => {
+        let newSocket = null;
+
         if (user) {
-            // Connect to socket server
-            const newSocket = io(import.meta.env.VITE_API_URL, {
+            // Initialize socket connection
+            newSocket = io('http://localhost:5000', {
                 auth: {
                     token: localStorage.getItem('token')
                 }
             });
 
-            setSocket(newSocket);
+            // Set up event listeners
+            newSocket.on('connect', () => {
+                console.log('Socket connected');
+                newSocket.emit('userConnected', user._id);
+            });
 
-            return () => newSocket.close();
+            newSocket.on('connect_error', (error) => {
+                console.error('Socket connection error:', error);
+            });
+
+            setSocket(newSocket);
         }
+
+        // Cleanup on unmount or when user changes
+        return () => {
+            if (newSocket) {
+                console.log('Disconnecting socket');
+                newSocket.disconnect();
+                setSocket(null);
+            }
+        };
     }, [user]);
 
     return (
-        <SocketContext.Provider value={{ socket }}>
+        <SocketContext.Provider value={socket}>
             {children}
         </SocketContext.Provider>
     );
-};
-
-export const useSocket = () => {
-    const context = useContext(SocketContext);
-    if (!context) {
-        throw new Error('useSocket must be used within a SocketProvider');
-    }
-    return context;
 };

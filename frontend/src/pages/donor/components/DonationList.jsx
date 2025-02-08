@@ -1,27 +1,33 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { FaEdit, FaTrash, FaClock, FaCheckCircle, FaTruck } from 'react-icons/fa';
 =======
 import { FaEdit, FaTrash, FaClock, FaCheckCircle, FaTruck, FaTimesCircle } from 'react-icons/fa';
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
+=======
+import { FaEdit, FaTrash, FaClock, FaCheckCircle, FaTruck, FaTimesCircle, FaChevronDown } from 'react-icons/fa';
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
 import { format } from 'date-fns';
 
 const DonationList = ({ donations, showActions = false, onEdit, onDelete }) => {
     const [selectedDonation, setSelectedDonation] = useState(null);
+    const [filter, setFilter] = useState('all');
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'pending': return 'text-amber-400';
-            case 'accepted': return 'text-blue-400';
-            case 'completed': return 'text-emerald-400';
-            case 'cancelled': return 'text-red-400';
-            default: return 'text-gray-400';
+            case 'pending': return 'bg-amber-400/10 text-amber-400 border-amber-400/20';
+            case 'accepted': return 'bg-blue-400/10 text-blue-400 border-blue-400/20';
+            case 'completed': return 'bg-emerald-400/10 text-emerald-400 border-emerald-400/20';
+            case 'cancelled': return 'bg-red-400/10 text-red-400 border-red-400/20';
+            default: return 'bg-gray-400/10 text-gray-400 border-gray-400/20';
         }
     };
 
     const getStatusIcon = (status) => {
         switch (status) {
+<<<<<<< HEAD
 <<<<<<< HEAD
             case 'pending': return FaClock;
             case 'accepted': return FaTruck;
@@ -38,41 +44,57 @@ const DonationList = ({ donations, showActions = false, onEdit, onDelete }) => {
                 return <FaTimesCircle className="text-red-500" />;
             default:
                 return <FaClock className="text-gray-500" />;
+=======
+            case 'completed': return <FaCheckCircle />;
+            case 'pending': return <FaClock />;
+            case 'accepted': return <FaTruck />;
+            case 'cancelled': return <FaTimesCircle />;
+            default: return <FaClock />;
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
         }
     };
 
     const formatDate = (dateString) => {
         try {
-            if (!dateString) return 'N/A';
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return 'Invalid Date';
-            return format(date, 'PPp'); // e.g., "Apr 29, 2023, 3:00 PM"
+            return format(new Date(dateString), 'PPp');
         } catch (error) {
-            console.error('Date formatting error:', error);
             return 'Invalid Date';
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
         }
     };
 
+    const filteredDonations = donations.filter(donation => 
+        filter === 'all' ? true : donation.status === filter
+    );
+
     return (
-        <div className="space-y-4">
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-                    Your Donations
-                </h2>
-                <div className="flex space-x-2">
+        <div className="space-y-6">
+            {/* Header and Filters */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                <div>
+                    <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+                        Your Donations
+                    </h2>
+                    <p className="text-gray-400 text-sm">
+                        Manage and track your contributions
+                    </p>
+                </div>
+                <div className="flex items-center space-x-4">
                     <select 
-                        className="px-3 py-1 rounded-xl bg-white/5 border border-white/10 text-gray-300 text-sm"
-                        onChange={(e) => {/* Handle filter */}}
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                        className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     >
                         <option value="all">All Status</option>
                         <option value="pending">Pending</option>
                         <option value="accepted">Accepted</option>
                         <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
                     </select>
                 </div>
             </div>
 
+<<<<<<< HEAD
             <div className="space-y-4">
                 <AnimatePresence>
 <<<<<<< HEAD
@@ -165,82 +187,124 @@ const DonationList = ({ donations, showActions = false, onEdit, onDelete }) => {
                 </AnimatePresence>
 =======
                     {donations.map((donation, index) => (
+=======
+            {/* Donations Grid/List */}
+            <div className="grid grid-cols-1 gap-6">
+                <AnimatePresence mode="wait">
+                    {filteredDonations.map((donation, index) => (
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
                         <motion.div
                             key={donation._id}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="backdrop-blur-lg bg-white/5 rounded-2xl p-6 border border-white/10"
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                            className="group backdrop-blur-lg bg-white/5 rounded-2xl border border-white/10 overflow-hidden hover:bg-white/10 transition-all duration-300"
                         >
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-4">
-                                    <div className={`p-3 rounded-xl bg-white/5 ${getStatusColor(donation.status)}`}>
+                            <div className="p-6">
+                                <div className="flex items-center justify-between flex-wrap gap-4">
+                                    {/* Status Badge */}
+                                    <div className={`px-4 py-2 rounded-xl border ${getStatusColor(donation.status)} flex items-center space-x-2`}>
                                         {getStatusIcon(donation.status)}
+                                        <span className="capitalize">{donation.status}</span>
                                     </div>
-                                    <div>
-                                        <h3 className="text-white font-semibold">
-                                            {donation.foodType} - {donation.quantity} {donation.quantityUnit || 'servings'}
-                                        </h3>
-                                        <p className="text-gray-400 text-sm">
-                                            Expiry: {formatDate(donation.expiryDate)}
-                                        </p>
-                                        <p className="text-gray-400 text-sm">
-                                            Pickup: {formatDate(donation.pickupTime)}
-                                        </p>
+
+                                    {/* Actions */}
+                                    {showActions && donation.status === 'pending' && (
+                                        <div className="flex items-center space-x-3">
+                                            <motion.button
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => onEdit(donation._id)}
+                                                className="p-2 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
+                                            >
+                                                <FaEdit />
+                                            </motion.button>
+                                            <motion.button
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => onDelete(donation._id)}
+                                                className="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                                            >
+                                                <FaTrash />
+                                            </motion.button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Main Content */}
+                                <div className="mt-4">
+                                    <h3 className="text-xl font-semibold text-white">
+                                        {donation.quantity} {donation.quantityUnit} of {donation.foodType}
+                                    </h3>
+                                    <div className="mt-2 grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-gray-400 text-sm">Expiry Date</p>
+                                            <p className="text-white">{formatDate(donation.expiryDate)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-gray-400 text-sm">Pickup Time</p>
+                                            <p className="text-white">{formatDate(donation.pickupTime)}</p>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {showActions && (
-                                    <div className="flex items-center space-x-3">
-                                        <button
-                                            onClick={() => onEdit(donation._id)}
-                                            className="p-2 rounded-xl bg-white/5 text-blue-400 hover:bg-white/10 transition-colors"
+                                {/* Expandable Details */}
+                                <AnimatePresence>
+                                    {selectedDonation === donation._id && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            className="mt-4 pt-4 border-t border-white/10"
                                         >
-                                            <FaEdit />
-                                        </button>
-                                        <button
-                                            onClick={() => onDelete(donation._id)}
-                                            className="p-2 rounded-xl bg-white/5 text-red-400 hover:bg-white/10 transition-colors"
-                                        >
-                                            <FaTrash />
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Expandable Details */}
-                            <AnimatePresence>
-                                {selectedDonation === donation._id && (
-                                    <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        className="mt-4 pt-4 border-t border-white/10"
-                                    >
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <p className="text-gray-400 text-sm">Description:</p>
-                                                <p className="text-white">{donation.description || 'No description provided'}</p>
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <p className="text-gray-400 text-sm">Description</p>
+                                                    <p className="text-white mt-1">
+                                                        {donation.description || 'No description provided'}
+                                                    </p>
+                                                </div>
+                                                {donation.assignedNGO && (
+                                                    <div>
+                                                        <p className="text-gray-400 text-sm">Assigned NGO</p>
+                                                        <p className="text-white mt-1">{donation.assignedNGO.name}</p>
+                                                    </div>
+                                                )}
                                             </div>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
 
-                            <button
-                                onClick={() => setSelectedDonation(
-                                    selectedDonation === donation._id ? null : donation._id
-                                )}
-                                className="mt-4 text-sm text-gray-400 hover:text-white transition-colors"
-                            >
-                                {selectedDonation === donation._id ? 'Show less' : 'Show more'}
-                            </button>
+                                {/* Toggle Details Button */}
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setSelectedDonation(
+                                        selectedDonation === donation._id ? null : donation._id
+                                    )}
+                                    className="mt-4 flex items-center space-x-2 text-sm text-gray-400 hover:text-white transition-colors"
+                                >
+                                    <span>{selectedDonation === donation._id ? 'Show less' : 'Show more'}</span>
+                                    <FaChevronDown
+                                        className={`transform transition-transform duration-300 ${
+                                            selectedDonation === donation._id ? 'rotate-180' : ''
+                                        }`}
+                                    />
+                                </motion.button>
+                            </div>
                         </motion.div>
                     ))}
                 </AnimatePresence>
-                {donations.length === 0 && (
-                    <p className="text-center text-gray-400">No donations found</p>
+
+                {filteredDonations.length === 0 && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-center py-12"
+                    >
+                        <p className="text-gray-400">No donations found</p>
+                    </motion.div>
                 )}
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
             </div>

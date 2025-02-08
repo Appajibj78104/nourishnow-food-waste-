@@ -15,17 +15,23 @@ const adminRoutes = require('./routes/adminRoutes');
 =======
 const fs = require('fs');
 const donorRoutes = require('./routes/donorRoutes');
+<<<<<<< HEAD
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
+=======
+const User = require('./models/User');
+
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
 // Load env vars
 dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
 
-// Socket.io setup
+// Socket.io setup with updated CORS configuration
 const io = new Server(httpServer, {
     cors: {
-        origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+        origin: ["http://localhost:5173", "http://localhost:5174"], // Allow both ports
+        methods: ["GET", "POST"],
         credentials: true
     }
 });
@@ -33,8 +39,9 @@ const io = new Server(httpServer, {
 // Make io accessible in routes
 app.set('io', io);
 
-// Middleware
+// CORS configuration
 app.use(cors({
+<<<<<<< HEAD
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
 <<<<<<< HEAD
     credentials: true
@@ -45,9 +52,15 @@ app.use(express.urlencoded({ extended: true }));
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization']
+=======
+    origin: ['http://localhost:5174', 'http://localhost:5173'],
+    credentials: true
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
 }));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Body parser
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -81,6 +94,7 @@ app.use('/api/ngo', ngoRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/donor', donorRoutes);
+
 // Error Handler
 app.use(errorHandler);
 
@@ -124,5 +138,48 @@ app.use((err, req, res, next) => {
         message: 'Something went wrong!',
         error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
+<<<<<<< HEAD
 >>>>>>> 7c904d1 (Saved local changes before pulling from remote)
+=======
+});
+
+// Update the socket.io setup
+io.on('connection', (socket) => {
+    console.log('New socket connection:', socket.id);
+
+    socket.on('userConnected', async (userId) => {
+        try {
+            console.log('User connected:', userId);
+            await User.findByIdAndUpdate(userId, { socketId: socket.id });
+        } catch (error) {
+            console.error('Error storing socket ID:', error);
+        }
+    });
+
+    socket.on('joinBroadcastRoom', (data) => {
+        console.log('User joining broadcast room:', data);
+        const roomName = `${data.role}-broadcasts`;
+        socket.join(roomName);
+        console.log(`Joined room: ${roomName}`);
+    });
+
+    socket.on('leaveBroadcastRoom', (data) => {
+        console.log('User leaving broadcast room:', data);
+        const roomName = `${data.role}-broadcasts`;
+        socket.leave(roomName);
+        console.log(`Left room: ${roomName}`);
+    });
+
+    socket.on('disconnect', async () => {
+        try {
+            await User.findOneAndUpdate(
+                { socketId: socket.id },
+                { $unset: { socketId: 1 } }
+            );
+            console.log('User disconnected:', socket.id);
+        } catch (error) {
+            console.error('Error removing socket ID:', error);
+        }
+    });
+>>>>>>> 2fa7dd5 (Updated backend and frontend changes)
 });

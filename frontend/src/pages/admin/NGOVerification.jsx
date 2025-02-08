@@ -16,7 +16,7 @@ import {
     DialogActions,
     TextField,
     Chip,
-    Grid2
+    Grid
 } from '@mui/material';
 import { CheckCircle, Cancel, RemoveRedEye } from '@mui/icons-material';
 import axios from 'axios';
